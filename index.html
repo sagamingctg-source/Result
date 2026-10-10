@@ -32,7 +32,7 @@
                 </div>
             </div>
 
-            <!-- একদম উপরে দৃশ্যমান গুগল শিট সিঙ্ক ও Apps Script ইউআরএল বার -->
+            <!-- সিঙ্ক ইউআরএল বার -->
             <div class="flex items-center gap-2 bg-red-950/60 px-3 py-2 rounded-xl border border-red-700 w-full md:w-auto">
                 <span class="text-xs font-semibold whitespace-nowrap">🔗 শিট সিঙ্ক URL:</span>
                 <input type="text" id="topScriptUrlInput" placeholder="https://script.google.com/macros/s/.../exec" class="px-3 py-1 text-xs rounded bg-white text-gray-800 focus:outline-none w-full md:w-64">
@@ -60,7 +60,7 @@
                     🔐
                 </div>
                 <h2 class="text-xl font-bold text-gray-800">শিক্ষক পোর্টাল লগইন</h2>
-                <p class="text-xs text-gray-500 mt-1">গুগল শিট থেকে সিঙ্ক করা আইডি ও পাসওয়ার্ড দিয়ে প্রবেশ করুন</p>
+                <p class="text-xs text-gray-500 mt-1">গুগল শিট সিঙ্ক করার পর আপনার আইডি ও পাসওয়ার্ড দিয়ে প্রবেশ করুন</p>
             </div>
             <form id="loginForm" onsubmit="handleLogin(event)" class="p-6 space-y-4">
                 <div>
@@ -79,7 +79,6 @@
 
         <!-- ড্যাশবোর্ড ও রেজাল্ট ইনপুট সেকশন -->
         <section id="dashboardSection" class="hidden space-y-6">
-            
             <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
                 <div>
                     <h3 class="text-lg font-bold text-gray-800">আপনার অ্যাসাইনকৃত বিষয়সমূহ</h3>
@@ -87,7 +86,6 @@
                 </div>
             </div>
 
-            <!-- অ্যাসাইনমেন্ট লিস্ট কার্ড -->
             <div id="assignmentsList" class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <!-- ডাইনামিকালি লোড হবে -->
             </div>
@@ -131,9 +129,7 @@
                     </button>
                 </div>
             </div>
-
         </section>
-
     </main>
 
     <!-- ফুটার -->
@@ -143,7 +139,6 @@
 
     <!-- স্ক্রিপ্ট লজিক -->
     <script>
-        // লোকাল স্টোরেজ থেকে ডেটা লোড করা বা ডিফল্ট রাখা
         let masterData = JSON.parse(localStorage.getItem('synced_master_data')) || {
             teachers: [],
             teacher_assignments: [],
@@ -154,7 +149,6 @@
         let currentTeacher = null;
         let activeAssignment = null;
 
-        // পেজ লোড হওয়ার সময় ইউআরএল ইনপুট ফিল্ড সেট করা
         window.onload = function() {
             const savedUrl = localStorage.getItem('google_script_url') || '';
             document.getElementById('topScriptUrlInput').value = savedUrl;
@@ -170,26 +164,67 @@
             }
         }
 
-        // গুগল শিট থেকে ডেটা সিঙ্ক করার ফাংশন (যদি আপনার Apps Script এ doGet ইমপ্লিমেন্ট করা থাকে অথবা লোকাল ক্যাশ ব্যবহার করে)
-        async function syncFromGoogleSheet() {
+        function syncFromGoogleSheet() {
             const scriptUrl = localStorage.getItem('google_script_url');
             if (!scriptUrl) {
-                alert('দয়া করে প্রথমে উপরের বক্সে Apps Script URL দিন এবং সেভ করুন!');
+                alert('দয়া করে প্রথমে উপরের বক্সে Apps Script URL দিন এবং সেভ করুন!');
                 return;
             }
-            alert('গুগল শিট থেকে ডেটা সিঙ্ক করার প্রক্রিয়া শুরু হয়েছে...');
-            // নোট: আপনার স্প্রেডশিট থেকে ডেটা ফেচ করার জন্য doGet অপশন প্রয়োজন হতে পারে। 
-            // বর্তমানে লোকাল ও ইনপুট সিঙ্ক কার্যকর রয়েছে।
+
+            alert('গুগল শিট থেকে ডেটা সিঙ্ক করা হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন...');
+
+            const callbackName = 'sync_callback_' + Math.round(Math.random() * 100000);
+            window[callbackName] = function(response) {
+                delete window[callbackName];
+                scriptTag.remove();
+
+                if (response && response.status === "success") {
+                    masterData = response.data;
+                    localStorage.setItem('synced_master_data', JSON.stringify(masterData));
+                    alert('সফলভাবে গুগল শিট থেকে সমস্ত ডেটা সিঙ্ক করা হয়েছে!');
+                } else {
+                    alert('সিঙ্ক করতে সমস্যা হয়েছে: ' + (response.message || 'অজানা ত্রুটি'));
+                }
+            };
+
+            const scriptTag = document.createElement('script');
+            scriptTag.src = `${scriptUrl}?callback=${callbackName}`;
+            scriptTag.onerror = function() {
+                delete window[callbackName];
+                scriptTag.remove();
+                directFetchSync(scriptUrl);
+            };
+            document.body.appendChild(scriptTag);
         }
 
-        // লগইন হ্যান্ডলার (গুগল শিট থেকে প্রাপ্ত শিক্ষকদের ডেটার সাথে ম্যাচ করবে)
+        async function directFetchSync(url) {
+            try {
+                const response = await fetch(url);
+                const result = await response.json();
+                if (result.status === "success") {
+                    masterData = result.data;
+                    localStorage.setItem('synced_master_data', JSON.stringify(masterData));
+                    alert('সফলভাবে সিঙ্ক সম্পন্ন হয়েছে!');
+                } else {
+                    alert('ডেটা পাওয়া যায়নি।');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('সিঙ্ক করা সম্ভব হয়নি। Apps Script সঠিক ফরম্যাটে ডিপ্লয় করা আছে কিনা নিশ্চিত করুন।');
+            }
+        }
+
         function handleLogin(e) {
             e.preventDefault();
             const uid = document.getElementById('userId').value.trim();
             const pass = document.getElementById('password').value.trim();
 
-            // যদি শিট থেকে ডেটা সিঙ্ক করা না থাকে, তবে স্যাম্পল বা লোকাল ডেটা থেকে যাচাই করবে
-            const teacher = masterData.teachers.find(t => t.username === uid && t.password === pass);
+            if (!masterData.teachers || masterData.teachers.length === 0) {
+                alert('কোনো শিক্ষক ডেটা পাওয়া যায়নি! অনুগ্রহ করে প্রথমে উপরের "🔄 শিট সিঙ্ক করুন" বোতামে ক্লিক করে ডেটা সিঙ্ক করে নিন।');
+                return;
+            }
+
+            const teacher = masterData.teachers.find(t => String(t.username).trim() === uid && String(t.password).trim() === pass);
 
             if (teacher) {
                 currentTeacher = teacher;
@@ -201,7 +236,7 @@
 
                 loadTeacherAssignments();
             } else {
-                alert('ভুল ইউজার আইডি বা পাসওয়ার্ড! অথবা প্রথমে গুগল শিট থেকে ডেটা সিঙ্ক করে নিন।');
+                alert('ভুল ইউজার আইডি বা পাসওয়ার্ড!');
             }
         }
 
@@ -218,7 +253,7 @@
             const container = document.getElementById('assignmentsList');
             container.innerHTML = '';
 
-            const assignments = masterData.teacher_assignments.filter(a => a.teacher_id === currentTeacher.index_no);
+            const assignments = masterData.teacher_assignments.filter(a => String(a.teacher_id).trim() === String(currentTeacher.index_no).trim());
 
             if (assignments.length === 0) {
                 container.innerHTML = `<p class="text-gray-500 col-span-3 text-center py-6">আপনার জন্য কোনো সাবজেক্ট অ্যাসাইন করা নেই।</p>`;
@@ -253,9 +288,8 @@
             const tbody = document.getElementById('studentMarksTableBody');
             tbody.innerHTML = '';
 
-            let students = masterData.students.filter(s => s.class === assign.class_name && s.section === assign.section);
+            let students = masterData.students.filter(s => String(s.class).trim() === String(assign.class_name).trim() && String(s.section).trim() === String(assign.section).trim());
 
-            // সাবজেক্ট ও ডিপার্টমেন্ট ফিল্টারিং
             if (assign.subject_code === "146") {
                 students = students.filter(s => s.department === "ব্যবসায়");
             }
