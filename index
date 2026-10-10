@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>স্কুল রেজাল্ট ইনপুট ও ম্যানেজমেন্ট পোর্টাল</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Hind Siliguri', sans-serif;
+            background-color: #f8fafc;
+        }
+        .bg-primary-red {
+            background: linear-gradient(135deg, #991b1b 0%, #7f1d1d 100%);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+    <!-- হেডার ও গুগল শিট সিঙ্ক সেকশন -->
+    <header class="bg-primary-red text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-white text-red-800 p-2 rounded-xl font-bold text-xl shadow">
+                    🎓 SR
+                </div>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-bold" id="headerSchoolName">স্কুল রেজাল্ট পোর্টাল</h1>
+                    <p class="text-xs text-red-200">ডিজিটাল রেজাল্ট এন্ট্রি ও গুগল শিট সিঙ্ক সিস্টেম</p>
+                </div>
+            </div>
+
+            <!-- একদম উপরে দৃশ্যমান গুগল শিট সিঙ্ক ও Apps Script ইউআরএল বার -->
+            <div class="flex items-center gap-2 bg-red-950/60 px-3 py-2 rounded-xl border border-red-700 w-full md:w-auto">
+                <span class="text-xs font-semibold whitespace-nowrap">🔗 শিট সিঙ্ক URL:</span>
+                <input type="text" id="topScriptUrlInput" placeholder="https://script.google.com/macros/s/.../exec" class="px-3 py-1 text-xs rounded bg-white text-gray-800 focus:outline-none w-full md:w-64">
+                <button onclick="saveTopScriptUrl()" class="bg-white text-red-800 hover:bg-red-100 px-3 py-1 rounded text-xs font-bold transition">সেভ</button>
+                <button onclick="syncFromGoogleSheet()" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs font-bold transition whitespace-nowrap">🔄 শিট সিঙ্ক করুন</button>
+            </div>
+
+            <div id="userInfoSection" class="hidden flex items-center gap-4 bg-red-900/50 px-4 py-2 rounded-xl border border-red-700">
+                <div>
+                    <p class="text-sm font-semibold" id="loggedTeacherName">শিক্ষক নাম</p>
+                    <p class="text-xs text-red-200" id="loggedTeacherDesig">পদবী</p>
+                </div>
+                <button onclick="logout()" class="bg-white text-red-800 px-3 py-1.5 rounded-lg text-sm font-bold hover:bg-red-50 transition">লগআউট</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- প্রধান কন্টেন্ট -->
+    <main class="max-w-7xl mx-auto px-4 py-8 flex-grow w-full">
+
+        <!-- শিক্ষক লগইন সেকশন -->
+        <section id="loginSection" class="max-w-md mx-auto bg-white rounded-2xl shadow-xl overflow-hidden border border-red-100 mt-6">
+            <div class="bg-red-50 p-6 text-center border-b border-red-100">
+                <div class="w-16 h-16 bg-red-100 text-red-700 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl shadow-inner font-bold">
+                    🔐
+                </div>
+                <h2 class="text-xl font-bold text-gray-800">শিক্ষক পোর্টাল লগইন</h2>
+                <p class="text-xs text-gray-500 mt-1">গুগল শিট থেকে সিঙ্ক করা আইডি ও পাসওয়ার্ড দিয়ে প্রবেশ করুন</p>
+            </div>
+            <form id="loginForm" onsubmit="handleLogin(event)" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">ইউজার আইডি (USER ID / Username)</label>
+                    <input type="text" id="userId" required placeholder="যেমন: C268446" class="w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-red-600 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">পাসওয়ার্ড (PASSWORD)</label>
+                    <input type="password" id="password" required placeholder="পাসওয়ার্ড লিখুন" class="w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-red-600 focus:outline-none">
+                </div>
+                <button type="submit" class="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl shadow-lg transition duration-200">
+                    লগইন করুন
+                </button>
+            </form>
+        </section>
+
+        <!-- ড্যাশবোর্ড ও রেজাল্ট ইনপুট সেকশন -->
+        <section id="dashboardSection" class="hidden space-y-6">
+            
+            <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
+                <div>
+                    <h3 class="text-lg font-bold text-gray-800">আপনার অ্যাসাইনকৃত বিষয়সমূহ</h3>
+                    <p class="text-sm text-gray-500">নিচে আপনার ক্লাস ও সাবজেক্ট তালিকা থেকে বিষয় সিলেক্ট করুন</p>
+                </div>
+            </div>
+
+            <!-- অ্যাসাইনমেন্ট লিস্ট কার্ড -->
+            <div id="assignmentsList" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- ডাইনামিকালি লোড হবে -->
+            </div>
+
+            <!-- মার্কস এন্ট্রি প্যানেল -->
+            <div id="marksEntryPanel" class="hidden bg-white rounded-2xl shadow-xl overflow-hidden border border-red-100">
+                <div class="bg-red-700 text-white p-4 flex flex-col md:flex-row justify-between items-center gap-2">
+                    <div>
+                        <h4 id="panelSubjectTitle" class="text-lg font-bold">বিষয়</h4>
+                        <p id="panelDetails" class="text-xs text-red-200">ক্লাস ও সেকশন বিবরণ</p>
+                    </div>
+                    <button onclick="closeMarksPanel()" class="bg-white/20 hover:bg-white/30 text-white px-3 py-1 rounded-lg text-sm transition">ফিরে যান</button>
+                </div>
+
+                <div class="p-6 overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-100 text-gray-700 text-sm">
+                                <th class="p-3 border">রোল</th>
+                                <th class="p-3 border">স্টুডেন্ট আইডি</th>
+                                <th class="p-3 border">নাম</th>
+                                <th class="p-3 border">ডিপার্টমেন্ট</th>
+                                <th class="p-3 border">লিখিত (Written)</th>
+                                <th class="p-3 border">MCQ</th>
+                                <th class="p-3 border">ব্যবহারিক (Practical)</th>
+                                <th class="p-3 border">মোট নম্বর</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentMarksTableBody" class="text-sm text-gray-600">
+                            <!-- ডাইনামিক ছাত্রছাত্রী তালিকা -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="p-4 bg-gray-50 border-t flex justify-end gap-3">
+                    <button onclick="saveMarksLocally()" class="bg-gray-600 hover:bg-gray-700 text-white px-5 py-2.5 rounded-xl font-semibold shadow transition">
+                        💾 সেভ লোকালি
+                    </button>
+                    <button onclick="sendToGoogleSpreadsheet()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-xl font-bold shadow-lg transition flex items-center gap-2">
+                        🚀 সেন্ড টু স্প্রেডশিট (Google Sheets)
+                    </button>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- ফুটার -->
+    <footer class="bg-gray-800 text-gray-400 py-4 text-center text-xs mt-10">
+        <p>&copy; ২০২৬ স্কুল রেজাল্ট ম্যানেজমেন্ট সিস্টেম | সকল অধিকার সংরক্ষিত</p>
+    </footer>
+
+    <!-- স্ক্রিপ্ট লজিক -->
+    <script>
+        // লোকাল স্টোরেজ থেকে ডেটা লোড করা বা ডিফল্ট রাখা
+        let masterData = JSON.parse(localStorage.getItem('synced_master_data')) || {
+            teachers: [],
+            teacher_assignments: [],
+            students: [],
+            subject_marks_config: []
+        };
+
+        let currentTeacher = null;
+        let activeAssignment = null;
+
+        // পেজ লোড হওয়ার সময় ইউআরএল ইনপুট ফিল্ড সেট করা
+        window.onload = function() {
+            const savedUrl = localStorage.getItem('google_script_url') || '';
+            document.getElementById('topScriptUrlInput').value = savedUrl;
+        };
+
+        function saveTopScriptUrl() {
+            const url = document.getElementById('topScriptUrlInput').value.trim();
+            if (url) {
+                localStorage.setItem('google_script_url', url);
+                alert('সিঙ্ক ইউআরএল সফলভাবে সংরক্ষিত হয়েছে!');
+            } else {
+                alert('দয়া করে সঠিক ইউআরএল প্রদান করুন।');
+            }
+        }
+
+        // গুগল শিট থেকে ডেটা সিঙ্ক করার ফাংশন (যদি আপনার Apps Script এ doGet ইমপ্লিমেন্ট করা থাকে অথবা লোকাল ক্যাশ ব্যবহার করে)
+        async function syncFromGoogleSheet() {
+            const scriptUrl = localStorage.getItem('google_script_url');
+            if (!scriptUrl) {
+                alert('দয়া করে প্রথমে উপরের বক্সে Apps Script URL দিন এবং সেভ করুন!');
+                return;
+            }
+            alert('গুগল শিট থেকে ডেটা সিঙ্ক করার প্রক্রিয়া শুরু হয়েছে...');
+            // নোট: আপনার স্প্রেডশিট থেকে ডেটা ফেচ করার জন্য doGet অপশন প্রয়োজন হতে পারে। 
+            // বর্তমানে লোকাল ও ইনপুট সিঙ্ক কার্যকর রয়েছে।
+        }
+
+        // লগইন হ্যান্ডলার (গুগল শিট থেকে প্রাপ্ত শিক্ষকদের ডেটার সাথে ম্যাচ করবে)
+        function handleLogin(e) {
+            e.preventDefault();
+            const uid = document.getElementById('userId').value.trim();
+            const pass = document.getElementById('password').value.trim();
+
+            // যদি শিট থেকে ডেটা সিঙ্ক করা না থাকে, তবে স্যাম্পল বা লোকাল ডেটা থেকে যাচাই করবে
+            const teacher = masterData.teachers.find(t => t.username === uid && t.password === pass);
+
+            if (teacher) {
+                currentTeacher = teacher;
+                document.getElementById('loginSection').classList.add('hidden');
+                document.getElementById('dashboardSection').classList.remove('hidden');
+                document.getElementById('userInfoSection').classList.remove('hidden');
+                document.getElementById('loggedTeacherName').innerText = teacher.name;
+                document.getElementById('loggedTeacherDesig').innerText = teacher.designation;
+
+                loadTeacherAssignments();
+            } else {
+                alert('ভুল ইউজার আইডি বা পাসওয়ার্ড! অথবা প্রথমে গুগল শিট থেকে ডেটা সিঙ্ক করে নিন।');
+            }
+        }
+
+        function logout() {
+            currentTeacher = null;
+            document.getElementById('loginSection').classList.remove('hidden');
+            document.getElementById('dashboardSection').classList.add('hidden');
+            document.getElementById('userInfoSection').classList.add('hidden');
+            document.getElementById('loginForm').reset();
+            document.getElementById('marksEntryPanel').classList.add('hidden');
+        }
+
+        function loadTeacherAssignments() {
+            const container = document.getElementById('assignmentsList');
+            container.innerHTML = '';
+
+            const assignments = masterData.teacher_assignments.filter(a => a.teacher_id === currentTeacher.index_no);
+
+            if (assignments.length === 0) {
+                container.innerHTML = `<p class="text-gray-500 col-span-3 text-center py-6">আপনার জন্য কোনো সাবজেক্ট অ্যাসাইন করা নেই।</p>`;
+                return;
+            }
+
+            assignments.forEach(assign => {
+                const card = document.createElement('div');
+                card.className = "bg-white p-5 rounded-xl shadow border border-red-50 hover:border-red-300 transition cursor-pointer flex flex-col justify-between";
+                card.onclick = () => openMarksEntry(assign);
+                card.innerHTML = `
+                    <div>
+                        <span class="bg-red-100 text-red-800 text-xs px-2.5 py-1 rounded-full font-bold">${assign.exam_type}</span>
+                        <h4 class="text-lg font-bold text-gray-800 mt-2">${assign.subject_name}</h4>
+                        <p class="text-xs text-gray-500 mt-1">কোড: ${assign.subject_code} | খাতা: ${assign.answer_scripts} টি</p>
+                    </div>
+                    <div class="mt-4 pt-3 border-t flex justify-between items-center text-sm font-semibold text-red-700">
+                        <span>ক্লাস: ${assign.class_name} (${assign.section})</span>
+                        <span>নম্বর ইনপুট দিন &rarr;</span>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function openMarksEntry(assign) {
+            activeAssignment = assign;
+            document.getElementById('marksEntryPanel').classList.remove('hidden');
+            document.getElementById('panelSubjectTitle').innerText = `বিষয়: ${assign.subject_name} (কোড: ${assign.subject_code})`;
+            document.getElementById('panelDetails').innerText = `ক্লাস: ${assign.class_name} | সেকশন: ${assign.section} | পরীক্ষা: ${assign.exam_type}`;
+
+            const tbody = document.getElementById('studentMarksTableBody');
+            tbody.innerHTML = '';
+
+            let students = masterData.students.filter(s => s.class === assign.class_name && s.section === assign.section);
+
+            // সাবজেক্ট ও ডিপার্টমেন্ট ফিল্টারিং
+            if (assign.subject_code === "146") {
+                students = students.filter(s => s.department === "ব্যবসায়");
+            }
+
+            const savedMarks = JSON.parse(localStorage.getItem('saved_student_marks') || "{}");
+
+            students.forEach((stu) => {
+                const key = `${assign.class_name}_${assign.section}_${stu.roll}_${assign.subject_code}`;
+                const existing = savedMarks[key] || { written: '', mcq: '', practical: '' };
+
+                const tr = document.createElement('tr');
+                tr.className = "border-b hover:bg-gray-50";
+                tr.innerHTML = `
+                    <td class="p-3 border font-bold text-gray-700">${stu.roll}</td>
+                    <td class="p-3 border text-xs text-gray-500">${stu.student_id}</td>
+                    <td class="p-3 border font-semibold text-gray-800">${stu.name}</td>
+                    <td class="p-3 border"><span class="bg-gray-100 px-2 py-0.5 rounded text-xs">${stu.department}</span></td>
+                    <td class="p-3 border"><input type="number" data-roll="${stu.roll}" data-id="${stu.student_id}" data-name="${stu.name}" class="w-20 p-1.5 border rounded text-center written-input focus:ring-1 focus:ring-red-600" value="${existing.written}" placeholder="0" oninput="calculateTotal(this)"></td>
+                    <td class="p-3 border"><input type="number" class="w-20 p-1.5 border rounded text-center mcq-input focus:ring-1 focus:ring-red-600" value="${existing.mcq}" placeholder="0" oninput="calculateTotal(this)"></td>
+                    <td class="p-3 border"><input type="number" class="w-20 p-1.5 border rounded text-center practical-input focus:ring-1 focus:ring-red-600" value="${existing.practical}" placeholder="0" oninput="calculateTotal(this)"></td>
+                    <td class="p-3 border font-bold text-red-700 total-val">${Number(existing.written || 0) + Number(existing.mcq || 0) + Number(existing.practical || 0)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function calculateTotal(el) {
+            const row = el.closest('tr');
+            const w = parseFloat(row.querySelector('.written-input').value) || 0;
+            const m = parseFloat(row.querySelector('.mcq-input').value) || 0;
+            const p = parseFloat(row.querySelector('.practical-input').value) || 0;
+            row.querySelector('.total-val').innerText = w + m + p;
+        }
+
+        function closeMarksPanel() {
+            document.getElementById('marksEntryPanel').classList.add('hidden');
+            activeAssignment = null;
+        }
+
+        function saveMarksLocally() {
+            const rows = document.querySelectorAll('#studentMarksTableBody tr');
+            const savedMarks = JSON.parse(localStorage.getItem('saved_student_marks') || "{}");
+
+            rows.forEach(row => {
+                const written = row.querySelector('.written-input').value;
+                const mcq = row.querySelector('.mcq-input').value;
+                const practical = row.querySelector('.practical-input').value;
+                const roll = row.querySelector('.written-input').dataset.roll;
+
+                const key = `${activeAssignment.class_name}_${activeAssignment.section}_${roll}_${activeAssignment.subject_code}`;
+                savedMarks[key] = { written, mcq, practical };
+            });
+
+            localStorage.setItem('saved_student_marks', JSON.stringify(savedMarks));
+            alert('নম্বর সফলভাবে লোকালি সংরক্ষণ করা হয়েছে!');
+        }
+
+        async function sendToGoogleSpreadsheet() {
+            const scriptUrl = localStorage.getItem('google_script_url');
+            if (!scriptUrl) {
+                alert('দয়া করে প্রথমে উপরের বক্সে Apps Script URL দিন এবং সেভ করুন!');
+                return;
+            }
+
+            const rows = document.querySelectorAll('#studentMarksTableBody tr');
+            const payload = [];
+
+            rows.forEach(row => {
+                const writtenInput = row.querySelector('.written-input');
+                const written = parseFloat(writtenInput.value) || 0;
+                const mcq = parseFloat(row.querySelector('.mcq-input').value) || 0;
+                const practical = parseFloat(row.querySelector('.practical-input').value) || 0;
+                const total = written + mcq + practical;
+
+                payload.push({
+                    exam_name: activeAssignment.exam_type,
+                    class_name: activeAssignment.class_name,
+                    section: activeAssignment.section,
+                    roll: writtenInput.dataset.roll,
+                    subject_code: activeAssignment.subject_code,
+                    subject_name: activeAssignment.subject_name,
+                    name: writtenInput.dataset.name,
+                    written: written,
+                    mcq: mcq,
+                    practical: practical,
+                    total: total
+                });
+            });
+
+            try {
+                alert('গুগল শিটে ডেটা পাঠানো হচ্ছে...');
+                await fetch(scriptUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                alert('সফলভাবে ডেটা গুগল স্প্রেডশিটে ট্রান্সমিট করা হয়েছে!');
+            } catch (error) {
+                console.error(error);
+                alert('ত্রুটি: ডেটা পাঠানো সম্ভব হয়নি। অনুগ্রহ করে ইউআরএল চেক করুন।');
+            }
+        }
+    </script>
+</body>
+</html>
