@@ -54,13 +54,13 @@
     <main class="max-w-7xl mx-auto px-4 py-8 flex-grow w-full">
 
         <!-- বিদ্যালয় তথ্য ও শিক্ষার্থী পরিসংখ্যান ব্যানার (লগইন এর উপরে) -->
-        <div id="schoolInfoBanner" class="hidden max-w-xl mx-auto mb-6 bg-white p-6 rounded-2xl shadow-xl border border-red-100 text-center space-y-2">
-            <h2 id="bannerSchoolName" class="text-2xl font-bold text-red-800">বিদ্যালয়ের নাম</h2>
-            <div id="bannerSchoolDetails" class="text-xs text-gray-500 font-medium flex flex-wrap justify-center gap-3">
+        <div id="schoolInfoBanner" class="max-w-xl mx-auto mb-6 bg-white p-6 rounded-2xl shadow-xl border border-red-100 text-center space-y-3">
+            <h2 id="bannerSchoolName" class="text-2xl font-bold text-red-800">লোড হচ্ছে...</h2>
+            <div id="bannerSchoolDetails" class="text-xs text-gray-600 font-medium flex flex-wrap justify-center gap-3">
                 <!-- EIIN, MPO ও ঠিকানা এখানে শো করবে -->
             </div>
             <div class="pt-2 border-t">
-                <p id="bannerTotalStudents" class="text-sm text-gray-700 font-bold">মোট শিক্ষার্থী: ০ জন</p>
+                <p id="bannerTotalStudents" class="text-sm text-gray-700 font-bold">মোট শিক্ষার্থী: -- জন</p>
                 <div id="classWiseCount" class="flex flex-wrap justify-center gap-2 mt-3 text-xs">
                     <!-- ক্লাস অনুযায়ী শিক্ষার্থী সংখ্যা এখানে লোড হবে -->
                 </div>
@@ -252,11 +252,8 @@
             }
         }
 
-        // বিদ্যালয়ের নাম, EIIN, MPO ও শিক্ষার্থী পরিসংখ্যান ব্যানার আপডেট ফাংশন
+        // বিদ্যালয়ের নাম, EIIN, MPO, ঠিকানা ও শিক্ষার্থী সংখ্যা ব্যানার আপডেট
         function updateSchoolInfoBanner() {
-            const banner = document.getElementById('schoolInfoBanner');
-            
-            // সেটিংস ডেটা চেক করা
             let schoolName = "স্কুল রেজাল্ট পোর্টাল";
             let eiin = "";
             let mpo = "";
@@ -275,26 +272,22 @@
             document.getElementById('bannerSchoolName').innerText = schoolName;
             document.getElementById('headerSchoolName').innerText = schoolName;
 
-            // ডিটেইলস ব্যাজ তৈরি
             const detailsContainer = document.getElementById('bannerSchoolDetails');
             detailsContainer.innerHTML = '';
             [eiin, mpo, thana, district].forEach(item => {
                 if (item) {
                     const span = document.createElement('span');
-                    span.className = "bg-red-50 text-red-700 px-2 py-0.5 rounded border border-red-100";
+                    span.className = "bg-red-50 text-red-700 px-2 py-0.5 rounded border border-red-100 font-semibold";
                     span.innerText = item;
                     detailsContainer.appendChild(span);
                 }
             });
 
             if (!masterData.students || masterData.students.length === 0) {
-                banner.classList.remove('hidden');
-                document.getElementById('bannerTotalStudents').innerText = "মোট শিক্ষার্থী: ০ জন (কোনো স্টুডেন্ট ডাটা পাওয়া যায়নি)";
+                document.getElementById('bannerTotalStudents').innerText = "মোট শিক্ষার্থী: ০ জন (অনুগ্রহ করে শিট সিঙ্ক করুন)";
                 document.getElementById('classWiseCount').innerHTML = '';
                 return;
             }
-
-            banner.classList.remove('hidden');
 
             const totalStudents = masterData.students.length;
             document.getElementById('bannerTotalStudents').innerText = `মোট শিক্ষার্থী: ${totalStudents} জন`;
@@ -562,10 +555,10 @@
                     <td class="p-3 border written-td" style="${hasWritten ? '' : 'display:none;'}">
                         <input type="number" min="0" max="${maxW}" data-roll="${stu.roll}" data-main-id="${mainStudentId}" data-name="${stu.name}" class="w-20 p-1.5 border rounded text-center written-input focus:ring-1 focus:ring-red-600" value="${existing.written}" placeholder="Max: ${maxW}" ${existing.absent ? 'disabled' : ''} oninput="validateAndCalculate(this, ${maxW})">
                     </td>
-                    <td class="p-3 border mcq-td" style="${hasMcq ? '' : 'display:none;'}">
+                    <td class="p-3 border mcq-th" style="${hasMcq ? '' : 'display:none;'}">
                         <input type="number" min="0" max="${maxM}" class="w-20 p-1.5 border rounded text-center mcq-input focus:ring-1 focus:ring-red-600" value="${existing.mcq}" placeholder="Max: ${maxM}" ${existing.absent ? 'disabled' : ''} oninput="validateAndCalculate(this, ${maxM})">
                     </td>
-                    <td class="p-3 border practical-td" style="${hasPractical ? '' : 'display:none;'}">
+                    <td class="p-3 border practical-th" style="${hasPractical ? '' : 'display:none;'}">
                         <input type="number" min="0" max="${maxP}" class="w-20 p-1.5 border rounded text-center practical-input focus:ring-1 focus:ring-red-600" value="${existing.practical}" placeholder="Max: ${maxP}" ${existing.absent ? 'disabled' : ''} oninput="validateAndCalculate(this, ${maxP})">
                     </td>
                     <td class="p-3 border font-bold text-red-700 total-val">${existing.absent ? 'Absent' : (Number(existing.written || 0) + Number(existing.mcq || 0) + Number(existing.practical || 0))}</td>
