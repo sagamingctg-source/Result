@@ -27,7 +27,7 @@
                     🎓 SR
                 </div>
                 <div>
-                    <h1 class="text-xl md:text-2xl font-bold" id="headerSchoolName">স্কুল রেজাল্ট পোর্টাল</h1>
+                    <h1 class="text-xl md:text-2xl font-bold">স্কুল রেজাল্ট পোর্টাল</h1>
                     <p class="text-xs text-red-200">ডিজিটাল রেজাল্ট এন্ট্রি ও গুগল শিট সিঙ্ক সিস্টেম</p>
                 </div>
             </div>
@@ -53,22 +53,8 @@
     <!-- প্রধান কন্টেন্ট -->
     <main class="max-w-7xl mx-auto px-4 py-8 flex-grow w-full">
 
-        <!-- বিদ্যালয় তথ্য ও শিক্ষার্থী পরিসংখ্যান ব্যানার (লগইন এর উপরে) -->
-        <div id="schoolInfoBanner" class="max-w-xl mx-auto mb-6 bg-white p-6 rounded-2xl shadow-xl border border-red-100 text-center space-y-3">
-            <h2 id="bannerSchoolName" class="text-2xl font-bold text-red-800">লোড হচ্ছে...</h2>
-            <div id="bannerSchoolDetails" class="text-xs text-gray-600 font-medium flex flex-wrap justify-center gap-3">
-                <!-- EIIN, MPO ও ঠিকানা এখানে শো করবে -->
-            </div>
-            <div class="pt-2 border-t">
-                <p id="bannerTotalStudents" class="text-sm text-gray-700 font-bold">মোট শিক্ষার্থী: -- জন</p>
-                <div id="classWiseCount" class="flex flex-wrap justify-center gap-2 mt-3 text-xs">
-                    <!-- ক্লাস অনুযায়ী শিক্ষার্থী সংখ্যা এখানে লোড হবে -->
-                </div>
-            </div>
-        </div>
-
         <!-- শিক্ষক লগইন সেকশন -->
-        <section id="loginSection" class="max-w-md mx-auto bg-white rounded-2xl shadow-xl overflow-hidden border border-red-100">
+        <section id="loginSection" class="max-w-md mx-auto bg-white rounded-2xl shadow-xl overflow-hidden border border-red-100 mt-6">
             <div class="bg-red-50 p-6 text-center border-b border-red-100">
                 <div class="w-16 h-16 bg-red-100 text-red-700 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl shadow-inner font-bold">
                     🔐
@@ -91,29 +77,33 @@
             </form>
         </section>
 
-        <!-- ড্যাশবোর্ড (ফিল্টারিং প্যানেল) -->
+        <!-- ড্যাশবোর্ড (স্টেপ বাই স্টেপ ফিল্টারিং) -->
         <section id="dashboardSection" class="hidden space-y-6">
             <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 space-y-4">
                 <h3 class="text-lg font-bold text-gray-800">পরীক্ষা ও বিষয় নির্বাচন করুন</h3>
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <!-- ১. পরীক্ষা -->
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 mb-1">পরীক্ষার নাম:</label>
                         <select id="examDropdown" onchange="onExamChange()" class="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-red-600 focus:outline-none text-sm bg-gray-50">
                             <option value="">-- পরীক্ষা সিলেক্ট করুন --</option>
                         </select>
                     </div>
+                    <!-- ২. শ্রেণী -->
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 mb-1">শ্রেণী (Class):</label>
                         <select id="classDropdown" onchange="onClassChange()" disabled class="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-red-600 focus:outline-none text-sm bg-gray-50 disabled:bg-gray-100">
                             <option value="">-- শ্রেণী সিলেক্ট করুন --</option>
                         </select>
                     </div>
+                    <!-- ৩. সেকশন -->
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 mb-1">সেকশন (Section):</label>
                         <select id="sectionDropdown" onchange="onSectionChange()" disabled class="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-red-600 focus:outline-none text-sm bg-gray-50 disabled:bg-gray-100">
                             <option value="">-- সেকশন সিলেক্ট করুন --</option>
                         </select>
                     </div>
+                    <!-- ৪. বিষয় -->
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 mb-1">বিষয় (Subject):</label>
                         <select id="subjectDropdown" onchange="onSubjectChange()" disabled class="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-red-600 focus:outline-none text-sm bg-gray-50 disabled:bg-gray-100">
@@ -176,8 +166,7 @@
             teachers: [],
             teacher_assignments: [],
             students: [],
-            subject_marks_config: [],
-            settings: []
+            subject_marks_config: []
         };
 
         let currentTeacher = null;
@@ -187,7 +176,6 @@
         window.onload = function() {
             const savedUrl = localStorage.getItem('google_script_url') || '';
             document.getElementById('topScriptUrlInput').value = savedUrl;
-            updateSchoolInfoBanner();
         };
 
         function saveTopScriptUrl() {
@@ -217,7 +205,6 @@
                 if (response && response.status === "success") {
                     masterData = response.data;
                     localStorage.setItem('synced_master_data', JSON.stringify(masterData));
-                    updateSchoolInfoBanner();
                     alert('সফলভাবে গুগল শিট থেকে সমস্ত ডেটা সিঙ্ক করা হয়েছে!');
                 } else {
                     alert('সিঙ্ক করতে সমস্যা হয়েছে: ' + (response.message || 'অজানা ত্রুটি'));
@@ -241,7 +228,6 @@
                 if (result.status === "success") {
                     masterData = result.data;
                     localStorage.setItem('synced_master_data', JSON.stringify(masterData));
-                    updateSchoolInfoBanner();
                     alert('সফলভাবে সিঙ্ক সম্পন্ন হয়েছে!');
                 } else {
                     alert('ডেটা পাওয়া যায়নি।');
@@ -250,63 +236,6 @@
                 console.error(err);
                 alert('সিঙ্ক করা সম্ভব হয়নি।');
             }
-        }
-
-        // বিদ্যালয়ের নাম, EIIN, MPO, ঠিকানা ও শিক্ষার্থী সংখ্যা ব্যানার আপডেট
-        function updateSchoolInfoBanner() {
-            let schoolName = "স্কুল রেজাল্ট পোর্টাল";
-            let eiin = "";
-            let mpo = "";
-            let thana = "";
-            let district = "";
-
-            if (masterData.settings && masterData.settings.length > 0) {
-                const s = masterData.settings[0];
-                schoolName = s.school_name || s.name || schoolName;
-                eiin = s.eiin_no ? `EIIN: ${s.eiin_no}` : "";
-                mpo = s.mpo_code ? `MPO Code: ${s.mpo_code}` : "";
-                thana = s.thana ? `থানা: ${s.thana}` : "";
-                district = s.district ? `জেলা: ${s.district}` : "";
-            }
-
-            document.getElementById('bannerSchoolName').innerText = schoolName;
-            document.getElementById('headerSchoolName').innerText = schoolName;
-
-            const detailsContainer = document.getElementById('bannerSchoolDetails');
-            detailsContainer.innerHTML = '';
-            [eiin, mpo, thana, district].forEach(item => {
-                if (item) {
-                    const span = document.createElement('span');
-                    span.className = "bg-red-50 text-red-700 px-2 py-0.5 rounded border border-red-100 font-semibold";
-                    span.innerText = item;
-                    detailsContainer.appendChild(span);
-                }
-            });
-
-            if (!masterData.students || masterData.students.length === 0) {
-                document.getElementById('bannerTotalStudents').innerText = "মোট শিক্ষার্থী: ০ জন (অনুগ্রহ করে শিট সিঙ্ক করুন)";
-                document.getElementById('classWiseCount').innerHTML = '';
-                return;
-            }
-
-            const totalStudents = masterData.students.length;
-            document.getElementById('bannerTotalStudents').innerText = `মোট শিক্ষার্থী: ${totalStudents} জন`;
-
-            const classCounts = {};
-            masterData.students.forEach(st => {
-                const cls = String(st.school_class || st.class || "অন্যান্য").trim();
-                classCounts[cls] = (classCounts[cls] || 0) + 1;
-            });
-
-            const classWiseContainer = document.getElementById('classWiseCount');
-            classWiseContainer.innerHTML = '';
-
-            Object.keys(classCounts).sort((a,b) => a - b).forEach(cls => {
-                const badge = document.createElement('span');
-                badge.className = "bg-gray-100 text-gray-800 px-2.5 py-1 rounded-lg border font-semibold";
-                badge.innerText = `শ্রেণী ${cls}: ${classCounts[cls]} জন`;
-                classWiseContainer.appendChild(badge);
-            });
         }
 
         function handleLogin(e) {
@@ -326,7 +255,6 @@
 
             if (teacher) {
                 currentTeacher = teacher;
-                document.getElementById('schoolInfoBanner').classList.add('hidden'); // লগইন করার পর ব্যানার হাইড হবে
                 document.getElementById('loginSection').classList.add('hidden');
                 document.getElementById('dashboardSection').classList.remove('hidden');
                 document.getElementById('userInfoSection').classList.remove('hidden');
@@ -341,8 +269,7 @@
 
         function logout() {
             currentTeacher = null;
-            document.getElementById('schoolInfoBanner').classList.remove('hidden'); // লগআউট করলে আবার দেখাবে
-            document.getElementById('loginSection').classList.remove('hidden');
+            document.getElementById('loginSection').classList.add('hidden');
             document.getElementById('dashboardSection').classList.add('hidden');
             document.getElementById('userInfoSection').classList.add('hidden');
             document.getElementById('loginForm').reset();
@@ -452,9 +379,10 @@
         function openMarksEntry(assign) {
             activeAssignment = assign;
             document.getElementById('marksEntryPanel').classList.remove('hidden');
-            document.getElementById('panelSubjectTitle').innerText = `বিষয়: ${assign.subject_name} (কোড: ${assign.subject_code})`;
+            document.getElementById('panelSubjectTitle', assign).innerText = `বিষয়: ${assign.subject_name} (কোড: ${assign.subject_code})`;
             document.getElementById('panelDetails').innerText = `ক্লাস: ${assign.class_name} | সেকশন: ${assign.section_name || assign.section} | পরীক্ষা: ${assign.exam_type}`;
 
+            // বিষয় কনফিগারেশন লোড (লিখিত, এমসিকিউ, প্র্যাকটিক্যাল সর্বোচ্চ নম্বর)
             activeConfig = masterData.subject_marks_config.find(c => 
                 String(c.class_name).trim() === String(assign.class_name).trim() && 
                 String(c.subject_code).trim() === String(assign.subject_code).trim()
@@ -486,6 +414,7 @@
                 return sClass === reqClass && sSec === reqSec;
             });
 
+            // ধর্মভিত্তিক ফিল্টারিং
             if (subjCode === "111" || subjName.includes("ইসলাম")) {
                 students = students.filter(s => String(s.religion || "").trim().includes("ইসলাম"));
             } else if (subjCode === "112" || subjName.includes("হিন্দু")) {
@@ -496,6 +425,7 @@
                 students = students.filter(s => String(s.religion || "").trim().includes("খ্রিস্ট"));
             }
 
+            // বিভাগ ও বিষয়ভিত্তিক ফিল্টারিং (৯ম ও ১০ম শ্রেণী)
             if (reqClass === "9" || reqClass === "10") {
                 if (subjCode === "136" || subjCode === "137" || subjCode === "138" || subjCode === "150") {
                     students = students.filter(s => String(s.department || "").trim() === "বিজ্ঞান");
@@ -503,6 +433,7 @@
                 else if (subjCode === "153" || subjCode === "110" || subjCode === "141" || subjCode === "140") {
                     students = students.filter(s => String(s.department || "").trim() === "মানবিক");
                 } 
+                // ব্যবসায় শিক্ষা ফিল্টারিং (ব্যবসায় / ব্যবসায় / ব্যবসা সহ সব ধরনের বানান সাপোর্ট করবে)
                 else if (subjCode === "146" || subjCode === "143" || subjCode === "152" || subjName.includes("হিসাববিজ্ঞান") || subjName.includes("ফিন্যান্স")) {
                     students = students.filter(s => {
                         const dept = String(s.department || "").trim();
@@ -555,10 +486,10 @@
                     <td class="p-3 border written-td" style="${hasWritten ? '' : 'display:none;'}">
                         <input type="number" min="0" max="${maxW}" data-roll="${stu.roll}" data-main-id="${mainStudentId}" data-name="${stu.name}" class="w-20 p-1.5 border rounded text-center written-input focus:ring-1 focus:ring-red-600" value="${existing.written}" placeholder="Max: ${maxW}" ${existing.absent ? 'disabled' : ''} oninput="validateAndCalculate(this, ${maxW})">
                     </td>
-                    <td class="p-3 border mcq-th" style="${hasMcq ? '' : 'display:none;'}">
+                    <td class="p-3 border mcq-td" style="${hasMcq ? '' : 'display:none;'}">
                         <input type="number" min="0" max="${maxM}" class="w-20 p-1.5 border rounded text-center mcq-input focus:ring-1 focus:ring-red-600" value="${existing.mcq}" placeholder="Max: ${maxM}" ${existing.absent ? 'disabled' : ''} oninput="validateAndCalculate(this, ${maxM})">
                     </td>
-                    <td class="p-3 border practical-th" style="${hasPractical ? '' : 'display:none;'}">
+                    <td class="p-3 border practical-td" style="${hasPractical ? '' : 'display:none;'}">
                         <input type="number" min="0" max="${maxP}" class="w-20 p-1.5 border rounded text-center practical-input focus:ring-1 focus:ring-red-600" value="${existing.practical}" placeholder="Max: ${maxP}" ${existing.absent ? 'disabled' : ''} oninput="validateAndCalculate(this, ${maxP})">
                     </td>
                     <td class="p-3 border font-bold text-red-700 total-val">${existing.absent ? 'Absent' : (Number(existing.written || 0) + Number(existing.mcq || 0) + Number(existing.practical || 0))}</td>
@@ -577,6 +508,7 @@
             row.querySelector('.total-val').innerText = chk.checked ? 'Absent' : '0';
         }
 
+        // কনফিগারেশনের বেশি নম্বর টাইপ করলে তা আটকে দেওয়ার ভ্যালিডেশন ফাংশন
         function validateAndCalculate(inputEl, maxLimit) {
             let val = parseFloat(inputEl.value);
             if (!isNaN(val)) {
