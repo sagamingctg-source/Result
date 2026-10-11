@@ -335,7 +335,7 @@
 
                 initExamDropdown();
             } else {
-                alert('ভুল ইউজার আইডি বা পাসওয়ার্ড!');
+                alert('ভুল ইউজার আইডি বা পাসওয়ার্ড!');
             }
         }
 
@@ -353,11 +353,13 @@
             const examDropdown = document.getElementById('examDropdown');
             examDropdown.innerHTML = '<option value="">-- পরীক্ষা সিলেক্ট করুন --</option>';
 
-            const teacherId = String(currentTeacher.teacher_id || currentTeacher.index_no).trim();
-            const assignments = masterData.teacher_assignments.filter(a => 
-                String(a.teacher_id).trim() === teacherId ||
-                String(a.teacher_id).trim() === String(currentTeacher.index_no).trim()
-            );
+            const tId = String(currentTeacher.teacher_id || "").trim();
+            const tIndex = String(currentTeacher.index_no || "").trim();
+
+            const assignments = masterData.teacher_assignments.filter(a => {
+                const assignTId = String(a.teacher_id || "").trim();
+                return assignTId === tId || assignTId === tIndex;
+            });
 
             window.teacherAssignments = assignments;
 
