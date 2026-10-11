@@ -77,33 +77,33 @@
             </form>
         </section>
 
-        <!-- ড্যাশবোর্ড (মাল্টি-স্টেপ ড্রপডাউন ফিল্টারিং) -->
+        <!-- ড্যাশবোর্ড (স্টেপ বাই স্টেপ ফিল্টারিং) -->
         <section id="dashboardSection" class="hidden space-y-6">
             <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 space-y-4">
-                <h3 class="text-lg font-bold text-gray-800">পরীক্ষা ও বিষয় ফিল্টারিং</h3>
+                <h3 class="text-lg font-bold text-gray-800">পরীক্ষা ও বিষয় নির্বাচন করুন</h3>
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <!-- ১. পরীক্ষার নাম ড্রপডাউন -->
+                    <!-- ১. পরীক্ষা -->
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 mb-1">পরীক্ষার নাম:</label>
                         <select id="examDropdown" onchange="onExamChange()" class="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-red-600 focus:outline-none text-sm bg-gray-50">
                             <option value="">-- পরীক্ষা সিলেক্ট করুন --</option>
                         </select>
                     </div>
-                    <!-- ২. শ্রেণী ড্রপডাউন -->
+                    <!-- ২. শ্রেণী -->
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 mb-1">শ্রেণী (Class):</label>
                         <select id="classDropdown" onchange="onClassChange()" disabled class="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-red-600 focus:outline-none text-sm bg-gray-50 disabled:bg-gray-100">
                             <option value="">-- শ্রেণী সিলেক্ট করুন --</option>
                         </select>
                     </div>
-                    <!-- ৩. সেকশন ড্রপডাউন -->
+                    <!-- ৩. সেকশন -->
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 mb-1">সেকশন (Section):</label>
                         <select id="sectionDropdown" onchange="onSectionChange()" disabled class="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-red-600 focus:outline-none text-sm bg-gray-50 disabled:bg-gray-100">
                             <option value="">-- সেকশন সিলেক্ট করুন --</option>
                         </select>
                     </div>
-                    <!-- ৪. বিষয় ড্রপডাউন -->
+                    <!-- ৪. বিষয় -->
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 mb-1">বিষয় (Subject):</label>
                         <select id="subjectDropdown" onchange="onSubjectChange()" disabled class="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-red-600 focus:outline-none text-sm bg-gray-50 disabled:bg-gray-100">
@@ -129,7 +129,7 @@
                                 <th class="p-3 border">রোল</th>
                                 <th class="p-3 border">স্টুডেন্ট আইডি</th>
                                 <th class="p-3 border">নাম</th>
-                                <th class="p-3 border">ডিপার্টমেন্ট / অপশনাল</th>
+                                <th class="p-3 border">ধর্ম / বিভাগ</th>
                                 <th class="p-3 border text-center">উপস্থিতি (Absent)</th>
                                 <th class="p-3 border written-th">লিখিত (Written)</th>
                                 <th class="p-3 border mcq-th">MCQ</th>
@@ -171,7 +171,6 @@
 
         let currentTeacher = null;
         let activeAssignment = null;
-        let currentConfig = null;
 
         window.onload = function() {
             const savedUrl = localStorage.getItem('google_script_url') || '';
@@ -269,14 +268,13 @@
 
         function logout() {
             currentTeacher = null;
-            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('loginSection').classList.remove('hidden');
             document.getElementById('dashboardSection').classList.add('hidden');
             document.getElementById('userInfoSection').classList.add('hidden');
             document.getElementById('loginForm').reset();
             document.getElementById('marksEntryPanel').classList.add('hidden');
         }
 
-        // ১. পরীক্ষার ড্রপডাউন ইনিশিয়ালাইজেশন
         function initExamDropdown() {
             const examDropdown = document.getElementById('examDropdown');
             examDropdown.innerHTML = '<option value="">-- পরীক্ষা সিলেক্ট করুন --</option>';
@@ -383,13 +381,12 @@
             document.getElementById('panelSubjectTitle').innerText = `বিষয়: ${assign.subject_name} (কোড: ${assign.subject_code})`;
             document.getElementById('panelDetails').innerText = `ক্লাস: ${assign.class_name} | সেকশন: ${assign.section_name || assign.section} | পরীক্ষা: ${assign.exam_type}`;
 
-            // বিষয় কনফিগারেশন চেক করা (লিখিত, এমসিকিউ, প্র্যাকটিক্যাল মার্কস)
-            currentConfig = masterData.subject_marks_config.find(c => 
+            // বিষয় কনফিগারেশন
+            const currentConfig = masterData.subject_marks_config.find(c => 
                 String(c.class_name).trim() === String(assign.class_name).trim() && 
                 String(c.subject_code).trim() === String(assign.subject_code).trim()
             ) || { written_marks: 100, mcq_marks: 0, practical_marks: 0 };
 
-            // কলাম দৃশ্যমান বা অদৃশ্য করার লজিক
             const hasWritten = Number(currentConfig.written_marks || 0) > 0;
             const hasMcq = Number(currentConfig.mcq_marks || 0) > 0;
             const hasPractical = Number(currentConfig.practical_marks || 0) > 0;
@@ -403,31 +400,66 @@
 
             const reqClass = String(assign.class_name).trim();
             const reqSec = String(assign.section_name || assign.section).trim();
+            const subjCode = String(assign.subject_code).trim();
             const subjName = String(assign.subject_name).trim();
 
+            // ১. বেসিক ফিল্টার (শ্রেণী ও সেকশন)
             let students = masterData.students.filter(s => {
                 const sClass = String(s.school_class || s.class || "").trim();
                 const sSec = String(s.section || "").trim();
                 return sClass === reqClass && sSec === reqSec;
             });
 
-            // ডিপার্টমেন্ট ও অপশনাল ফিল্টারিং
+            // ২. ধর্মভিত্তিক ফিল্টারিং (সকল শ্রেণীর জন্য প্রযোজ্য)
+            if (subjCode === "111" || subjName.includes("ইসলাম")) {
+                students = students.filter(s => String(s.religion || "").trim().includes("ইসলাম"));
+            } else if (subjCode === "112" || subjName.includes("হিন্দু")) {
+                students = students.filter(s => String(s.religion || "").trim().includes("হিন্দু"));
+            } else if (subjCode === "113" || subjName.includes("বৌদ্ধ")) {
+                students = students.filter(s => String(s.religion || "").trim().includes("বৌদ্ধ"));
+            } else if (subjCode === "114" || subjName.includes("খ্রিস্ট")) {
+                students = students.filter(s => String(s.religion || "").trim().includes("খ্রিস্ট"));
+            }
+
+            // ৩. বিভাগ ও বিষয়ভিত্তিক সূক্ষ্ম ফিল্টারিং (৯ম ও ১০ম শ্রেণীর জন্য)
             if (reqClass === "9" || reqClass === "10") {
-                if (subjName.includes("হিসাববিজ্ঞান") || subjName.includes("ব্যবসায়")) {
-                    students = students.filter(s => String(s.department).trim() === "ব্যবসায়");
-                } else if (subjName.includes("পদার্থবিজ্ঞান") || subjName.includes("রসায়ন")) {
-                    students = students.filter(s => String(s.department).trim() === "বিজ্ঞান");
-                } else if (subjName.includes("উচ্চতর গণিত")) {
-                    students = students.filter(s => String(s.optional_subject).trim().includes("উচ্চতর গণিত") || String(s.department).trim() === "বিজ্ঞান");
-                } else if (subjName.includes("গার্হস্থ্য")) {
-                    students = students.filter(s => String(s.optional_subject).trim().includes("গার্হস্থ্য"));
+                // বিজ্ঞান বিভাগের জন্য নির্দিষ্ট বিষয়সমূহ (পদার্থ, রসায়ন, জীববিজ্ঞান, বাওবি)
+                if (subjCode === "136" || subjCode === "137" || subjCode === "138" || subjCode === "150") {
+                    students = students.filter(s => String(s.department || "").trim() === "বিজ্ঞান");
+                } 
+                // মানবিক বিভাগের বিষয়সমূহ (ইতিহাস, ভূগোল, অর্থনীতি, পৌরনীতি)
+                else if (subjCode === "153" || subjCode === "110" || subjCode === "141" || subjCode === "140") {
+                    students = students.filter(s => String(s.department || "").trim() === "মানবিক");
+                } 
+                // ব্যবসায় শিক্ষা বিভাগের বিষয়সমূহ (হিসাববিজ্ঞান, ব্যবসায় উদ্যোগ, ফিন্যান্স)
+                else if (subjCode === "146" || subjCode === "143" || subjCode === "152") {
+                    students = students.filter(s => String(s.department || "").trim() === "ব্যবসায়");
+                } 
+                // সাধারণ বিজ্ঞান (কোড: 127) - মানবিক ও ব্যবসায় শিক্ষা উভয় বিভাগের জন্য
+                else if (subjCode === "127") {
+                    students = students.filter(s => {
+                        const dept = String(s.department || "").trim();
+                        return dept === "মানবিক" || dept === "ব্যবসায়";
+                    });
+                } 
+                // অপশনাল: উচ্চতর গণিত (কোড: 126)
+                else if (subjCode === "126" || subjName.includes("উচ্চতর গণিত")) {
+                    students = students.filter(s => {
+                        const opt = String(s.optional_subject || "").trim();
+                        const dept = String(s.department || "").trim();
+                        return opt.includes("উচ্চতর গণিত") || dept === "বিজ্ঞান";
+                    });
+                } 
+                // অপশনাল: গার্হস্থ্যবিজ্ঞান (কোড: 151)
+                else if (subjCode === "151" || subjName.includes("গার্হস্থ্য")) {
+                    students = students.filter(s => String(s.optional_subject || "").trim().includes("গার্হস্থ্য"));
                 }
             }
 
             students.sort((a, b) => Number(a.roll) - Number(b.roll));
 
             if (students.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="9" class="text-center py-6 text-gray-400">কোনো স্টুডেন্ট পাওয়া যায়নি।</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9" class="text-center py-6 text-gray-400">এই বিষয়ের জন্য কোনো স্টুডেন্ট পাওয়া যায়নি।</td></tr>`;
                 return;
             }
 
@@ -438,8 +470,8 @@
                 const key = `${assign.class_name}_${assign.section_name || assign.section}_${stu.roll}_${assign.subject_code}`;
                 const existing = savedMarks[key] || { written: '', mcq: '', practical: '', absent: false };
 
-                const deptText = stu.department && stu.department !== "nan" ? stu.department : '';
-                const optText = stu.optional_subject && stu.optional_subject !== "nan" ? ` (${stu.optional_subject})` : '';
+                const relText = stu.religion ? stu.religion : '';
+                const deptText = stu.department && stu.department !== "nan" ? ` | ${stu.department}` : '';
 
                 const tr = document.createElement('tr');
                 tr.className = "border-b hover:bg-gray-50";
@@ -447,7 +479,7 @@
                     <td class="p-3 border font-bold text-gray-700">${stu.roll}</td>
                     <td class="p-3 border font-mono text-xs text-red-700 font-bold">${mainStudentId}</td>
                     <td class="p-3 border font-semibold text-gray-800">${stu.name}</td>
-                    <td class="p-3 border text-xs"><span class="bg-gray-100 px-2 py-0.5 rounded">${deptText}${optText}</span></td>
+                    <td class="p-3 border text-xs"><span class="bg-gray-100 px-2 py-0.5 rounded">${relText}${deptText}</span></td>
                     <td class="p-3 border text-center"><input type="checkbox" class="absent-chk w-4 h-4 text-red-600 rounded" ${existing.absent ? 'checked' : ''} onchange="toggleAbsent(this)"></td>
                     <td class="p-3 border written-td" style="${hasWritten ? '' : 'display:none;'}"><input type="number" data-roll="${stu.roll}" data-main-id="${mainStudentId}" data-name="${stu.name}" class="w-20 p-1.5 border rounded text-center written-input focus:ring-1 focus:ring-red-600" value="${existing.written}" placeholder="0" ${existing.absent ? 'disabled' : ''} oninput="calculateTotal(this)"></td>
                     <td class="p-3 border mcq-td" style="${hasMcq ? '' : 'display:none;'}"><input type="number" class="w-20 p-1.5 border rounded text-center mcq-input focus:ring-1 focus:ring-red-600" value="${existing.mcq}" placeholder="0" ${existing.absent ? 'disabled' : ''} oninput="calculateTotal(this)"></td>
