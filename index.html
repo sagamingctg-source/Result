@@ -77,17 +77,21 @@
             </form>
         </section>
 
-        <!-- ড্যাশবোর্ড ও রেজাল্ট ইনপুট সেকশন -->
+        <!-- ড্যাশবোর্ড (ড্রপডাউন সিলেক্টর ভিউ) -->
         <section id="dashboardSection" class="hidden space-y-6">
-            <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 space-y-4">
                 <div>
-                    <h3 class="text-lg font-bold text-gray-800">আপনার অ্যাসাইনকৃত বিষয়সমূহ</h3>
-                    <p class="text-sm text-gray-500">নিচে আপনার ক্লাস ও সাবজেক্ট তালিকা থেকে বিষয় সিলেক্ট করুন</p>
+                    <h3 class="text-lg font-bold text-gray-800">বিষয় সিলেক্ট করুন</h3>
+                    <p class="text-sm text-gray-500">আপনার অ্যাসাইনকৃত বিষয়গুলোর মধ্যে থেকে নিচের ড্রপডাউন সিলেক্ট করুন</p>
                 </div>
-            </div>
 
-            <div id="assignmentsList" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <!-- ডাইনামিকালি লোড হবে -->
+                <!-- ড্রপডাউন সিলেকশন বক্স -->
+                <div class="max-w-xl">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">অ্যাসাইনকৃত বিষয় বেছে নিন:</label>
+                    <select id="assignmentDropdown" onchange="onAssignmentSelected()" class="w-full p-3 border border-red-200 rounded-xl focus:ring-2 focus:ring-red-600 focus:outline-none text-gray-800 bg-red-50/30 font-semibold">
+                        <option value="">-- বিষয় পছন্দ করুন --</option>
+                    </select>
+                </div>
             </div>
 
             <!-- মার্কস এন্ট্রি প্যানেল -->
@@ -97,7 +101,6 @@
                         <h4 id="panelSubjectTitle" class="text-lg font-bold">বিষয়</h4>
                         <p id="panelDetails" class="text-xs text-red-200">ক্লাস ও সেকশন বিবরণ</p>
                     </div>
-                    <button onclick="closeMarksPanel()" class="bg-white/20 hover:bg-white/30 text-white px-3 py-1 rounded-lg text-sm transition">ফিরে যান</button>
                 </div>
 
                 <div class="p-6 overflow-x-auto">
@@ -105,9 +108,9 @@
                         <thead>
                             <tr class="bg-gray-100 text-gray-700 text-sm">
                                 <th class="p-3 border">রোল</th>
-                                <th class="p-3 border">স্টুডেন্ট আইডি</th>
+                                <th class="p-3 border">স্টুডেন্ট আইডি (Main ID)</th>
                                 <th class="p-3 border">নাম</th>
-                                <th class="p-3 border">ডিপার্টমেন্ট</th>
+                                <th class="p-3 border">ডিপার্টমেন্ট / অপশনাল</th>
                                 <th class="p-3 border">লিখিত (Written)</th>
                                 <th class="p-3 border">MCQ</th>
                                 <th class="p-3 border">ব্যবহারিক (Practical)</th>
@@ -224,9 +227,8 @@
                 return;
             }
 
-            // শিক্ষকদের টেবিলে username অথবা index_no দিয়ে মেলানো হচ্ছে
             const teacher = masterData.teachers.find(t => 
-                (String(t.username).trim() === uid || String(t.index_no).trim() === uid) && 
+                (String(t.username).trim() === uid || String(t.index_no).trim() === uid || String(t.teacher_id).trim() === uid) && 
                 String(t.password).trim() === pass
             );
 
@@ -238,7 +240,7 @@
                 document.getElementById('loggedTeacherName').innerText = teacher.name;
                 document.getElementById('loggedTeacherDesig').innerText = teacher.designation;
 
-                loadTeacherAssignments();
+                populateAssignmentsDropdown();
             } else {
                 alert('ভুল ইউজার আইডি বা পাসওয়ার্ড!');
             }
@@ -253,69 +255,111 @@
             document.getElementById('marksEntryPanel').classList.add('hidden');
         }
 
-        function loadTeacherAssignments() {
-            const container = document.getElementById('assignmentsList');
-            container.innerHTML = '';
+        // কার্ডের বদলে ড্রপডাউন অপশনে লোড করা
+        function populateAssignmentsDropdown() {
+            const dropdown = document.getElementById('assignmentDropdown');
+            dropdown.innerHTML = '<option value="">-- বিষয় পছন্দ করুন --</option>';
 
-            // শিক্ষক আইডি (যেমন: 5) অথবা ইনডেক্স নম্বর (যেমন: C268446) দিয়ে অ্যাসাইনমেন্ট ফিল্টার করা
+            const teacherId = String(currentTeacher.teacher_id || currentTeacher.index_no).trim();
+
             const assignments = masterData.teacher_assignments.filter(a => 
-                String(a.teacher_id).trim() === String(currentTeacher.teacher_id).trim() ||
+                String(a.teacher_id).trim() === teacherId ||
                 String(a.teacher_id).trim() === String(currentTeacher.index_no).trim()
             );
 
             if (assignments.length === 0) {
-                container.innerHTML = `<p class="text-gray-500 col-span-3 text-center py-6">আপনার জন্য কোনো সাবজেক্ট অ্যাসাইন করা নেই। (Teacher ID: ${currentTeacher.teacher_id || currentTeacher.index_no})</p>`;
+                const opt = document.createElement('option');
+                opt.text = "কোনো সাবজেক্ট অ্যাসাইন করা নেই";
+                dropdown.add(opt);
                 return;
             }
 
-            assignments.forEach(assign => {
-                const card = document.createElement('div');
-                card.className = "bg-white p-5 rounded-xl shadow border border-red-50 hover:border-red-300 transition cursor-pointer flex flex-col justify-between";
-                card.onclick = () => openMarksEntry(assign);
-                card.innerHTML = `
-                    <div>
-                        <span class="bg-red-100 text-red-800 text-xs px-2.5 py-1 rounded-full font-bold">${assign.exam_type}</span>
-                        <h4 class="text-lg font-bold text-gray-800 mt-2">${assign.subject_name}</h4>
-                        <p class="text-xs text-gray-500 mt-1">কোড: ${assign.subject_code} | খাতা: ${assign.answer_scripts} টি</p>
-                    </div>
-                    <div class="mt-4 pt-3 border-t flex justify-between items-center text-sm font-semibold text-red-700">
-                        <span>ক্লাস: ${assign.class_name} (${assign.section})</span>
-                        <span>নম্বর ইনপুট দিন &rarr;</span>
-                    </div>
-                `;
-                container.appendChild(card);
+            assignments.forEach((assign, idx) => {
+                const opt = document.createElement('option');
+                opt.value = idx;
+                opt.text = `[শ্রেণী: ${assign.class_name} - ${assign.section_name || assign.section}] ${assign.subject_name} (কোড: ${assign.subject_code}) - ${assign.exam_type}`;
+                dropdown.add(opt);
             });
+
+            // রেফারেন্সের জন্য বিশ্বস্ত অ্যাসাইনমেন্ট লিস্ট সেট
+            window.currentTeacherAssignments = assignments;
+        }
+
+        function onAssignmentSelected() {
+            const dropdown = document.getElementById('assignmentDropdown');
+            const selectedIdx = dropdown.value;
+
+            if (selectedIdx === "") {
+                document.getElementById('marksEntryPanel').classList.add('hidden');
+                return;
+            }
+
+            const assign = window.currentTeacherAssignments[selectedIdx];
+            openMarksEntry(assign);
         }
 
         function openMarksEntry(assign) {
             activeAssignment = assign;
             document.getElementById('marksEntryPanel').classList.remove('hidden');
             document.getElementById('panelSubjectTitle').innerText = `বিষয়: ${assign.subject_name} (কোড: ${assign.subject_code})`;
-            document.getElementById('panelDetails').innerText = `ক্লাস: ${assign.class_name} | সেকশন: ${assign.section} | পরীক্ষা: ${assign.exam_type}`;
+            document.getElementById('panelDetails').innerText = `ক্লাস: ${assign.class_name} | সেকশন: ${assign.section_name || assign.section} | পরীক্ষা: ${assign.exam_type}`;
 
             const tbody = document.getElementById('studentMarksTableBody');
             tbody.innerHTML = '';
 
-            let students = masterData.students.filter(s => String(s.class).trim() === String(assign.class_name).trim() && String(s.section).trim() === String(assign.section).trim());
+            const reqClass = String(assign.class_name).trim();
+            const reqSec = String(assign.section_name || assign.section).trim();
+            const subjName = String(assign.subject_name).trim();
 
-            if (assign.subject_code === "146") {
-                students = students.filter(s => s.department === "ব্যবসায়");
+            // ১. ক্লাস এবং সেকশন ফিল্টারিং
+            let students = masterData.students.filter(s => {
+                const sClass = String(s.school_class || s.class || "").trim();
+                const sSec = String(s.section || "").trim();
+                return sClass === reqClass && sSec === reqSec;
+            });
+
+            // ২. গ্রুপ/ডিপার্টমেন্ট ও অপশনাল ফিল্টারিং (৯ম ও ১০ম শ্রেণীর জন্য)
+            if (reqClass === "9" || reqClass === "10") {
+                if (subjName.includes("হিসাববিজ্ঞান") || subjName.includes("ব্যবসায়")) {
+                    students = students.filter(s => String(s.department).trim() === "ব্যবসায়");
+                } else if (subjName.includes("পদার্থবিজ্ঞান") || subjName.includes("রসায়ন") || subjName.includes("জীববিজ্ঞান")) {
+                    students = students.filter(s => String(s.department).trim() === "বিজ্ঞান");
+                } else if (subjName.includes("ইতিহাস") || subjName.includes("পৌরনীতি")) {
+                    students = students.filter(s => String(s.department).trim() === "মানবিক");
+                } else if (subjName.includes("উচ্চতর গণিত")) {
+                    students = students.filter(s => String(s.optional_subject).trim().includes("উচ্চতর গণিত") || String(s.department).trim() === "বিজ্ঞান");
+                } else if (subjName.includes("গার্হস্থ্যবিজ্ঞান") || subjName.includes("গার্হস্থ্য")) {
+                    students = students.filter(s => String(s.optional_subject).trim().includes("গার্হস্থ্যবিজ্ঞান") || String(s.optional_subject).trim().includes("গার্হস্থ্য"));
+                }
+            }
+
+            // রোল অনুসারে সাজানো (Ascending Sort)
+            students.sort((a, b) => Number(a.roll) - Number(b.roll));
+
+            if (students.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-gray-400">এই সাবজেক্ট বা গ্রুপের জন্য কোনো স্টুডেন্ট পাওয়া যায়নি।</td></tr>`;
+                return;
             }
 
             const savedMarks = JSON.parse(localStorage.getItem('saved_student_marks') || "{}");
 
             students.forEach((stu) => {
-                const key = `${assign.class_name}_${assign.section}_${stu.roll}_${assign.subject_code}`;
+                // স্টুডেন্টের আসল ID ধরা (কলাম A-এর মান: id / 1, 2, 3...)
+                const mainStudentId = stu.id || stu.student_id || stu.roll;
+                const key = `${assign.class_name}_${assign.section_name || assign.section}_${stu.roll}_${assign.subject_code}`;
                 const existing = savedMarks[key] || { written: '', mcq: '', practical: '' };
+
+                const deptText = stu.department && stu.department !== "nan" ? stu.department : '';
+                const optText = stu.optional_subject && stu.optional_subject !== "nan" ? ` (${stu.optional_subject})` : '';
 
                 const tr = document.createElement('tr');
                 tr.className = "border-b hover:bg-gray-50";
                 tr.innerHTML = `
                     <td class="p-3 border font-bold text-gray-700">${stu.roll}</td>
-                    <td class="p-3 border text-xs text-gray-500">${stu.student_id}</td>
+                    <td class="p-3 border font-mono text-xs text-red-700 font-bold">${mainStudentId}</td>
                     <td class="p-3 border font-semibold text-gray-800">${stu.name}</td>
-                    <td class="p-3 border"><span class="bg-gray-100 px-2 py-0.5 rounded text-xs">${stu.department}</span></td>
-                    <td class="p-3 border"><input type="number" data-roll="${stu.roll}" data-id="${stu.student_id}" data-name="${stu.name}" class="w-20 p-1.5 border rounded text-center written-input focus:ring-1 focus:ring-red-600" value="${existing.written}" placeholder="0" oninput="calculateTotal(this)"></td>
+                    <td class="p-3 border"><span class="bg-gray-100 px-2 py-0.5 rounded text-xs">${deptText}${optText}</span></td>
+                    <td class="p-3 border"><input type="number" data-roll="${stu.roll}" data-main-id="${mainStudentId}" data-name="${stu.name}" class="w-20 p-1.5 border rounded text-center written-input focus:ring-1 focus:ring-red-600" value="${existing.written}" placeholder="0" oninput="calculateTotal(this)"></td>
                     <td class="p-3 border"><input type="number" class="w-20 p-1.5 border rounded text-center mcq-input focus:ring-1 focus:ring-red-600" value="${existing.mcq}" placeholder="0" oninput="calculateTotal(this)"></td>
                     <td class="p-3 border"><input type="number" class="w-20 p-1.5 border rounded text-center practical-input focus:ring-1 focus:ring-red-600" value="${existing.practical}" placeholder="0" oninput="calculateTotal(this)"></td>
                     <td class="p-3 border font-bold text-red-700 total-val">${Number(existing.written || 0) + Number(existing.mcq || 0) + Number(existing.practical || 0)}</td>
@@ -332,23 +376,21 @@
             row.querySelector('.total-val').innerText = w + m + p;
         }
 
-        function closeMarksPanel() {
-            document.getElementById('marksEntryPanel').classList.add('hidden');
-            activeAssignment = null;
-        }
-
         function saveMarksLocally() {
             const rows = document.querySelectorAll('#studentMarksTableBody tr');
             const savedMarks = JSON.parse(localStorage.getItem('saved_student_marks') || "{}");
 
             rows.forEach(row => {
-                const written = row.querySelector('.written-input').value;
-                const mcq = row.querySelector('.mcq-input').value;
-                const practical = row.querySelector('.practical-input').value;
-                const roll = row.querySelector('.written-input').dataset.roll;
+                const writtenInput = row.querySelector('.written-input');
+                if (writtenInput) {
+                    const written = writtenInput.value;
+                    const mcq = row.querySelector('.mcq-input').value;
+                    const practical = row.querySelector('.practical-input').value;
+                    const roll = writtenInput.dataset.roll;
 
-                const key = `${activeAssignment.class_name}_${activeAssignment.section}_${roll}_${activeAssignment.subject_code}`;
-                savedMarks[key] = { written, mcq, practical };
+                    const key = `${activeAssignment.class_name}_${activeAssignment.section_name || activeAssignment.section}_${roll}_${activeAssignment.subject_code}`;
+                    savedMarks[key] = { written, mcq, practical };
+                }
             });
 
             localStorage.setItem('saved_student_marks', JSON.stringify(savedMarks));
@@ -367,25 +409,33 @@
 
             rows.forEach(row => {
                 const writtenInput = row.querySelector('.written-input');
-                const written = parseFloat(writtenInput.value) || 0;
-                const mcq = parseFloat(row.querySelector('.mcq-input').value) || 0;
-                const practical = parseFloat(row.querySelector('.practical-input').value) || 0;
-                const total = written + mcq + practical;
+                if (writtenInput) {
+                    const written = parseFloat(writtenInput.value) || 0;
+                    const mcq = parseFloat(row.querySelector('.mcq-input').value) || 0;
+                    const practical = parseFloat(row.querySelector('.practical-input').value) || 0;
+                    const total = written + mcq + practical;
 
-                payload.push({
-                    exam_name: activeAssignment.exam_type,
-                    class_name: activeAssignment.class_name,
-                    section: activeAssignment.section,
-                    roll: writtenInput.dataset.roll,
-                    subject_code: activeAssignment.subject_code,
-                    subject_name: activeAssignment.subject_name,
-                    name: writtenInput.dataset.name,
-                    written: written,
-                    mcq: mcq,
-                    practical: practical,
-                    total: total
-                });
+                    payload.push({
+                        exam_name: activeAssignment.exam_type,
+                        class_name: activeAssignment.class_name,
+                        section: activeAssignment.section_name || activeAssignment.section,
+                        roll: writtenInput.dataset.roll,
+                        student_id: writtenInput.dataset.mainId, // স্টুডেন্ট শিটের প্রথম কলামের ID
+                        subject_code: activeAssignment.subject_code,
+                        subject_name: activeAssignment.subject_name,
+                        name: writtenInput.dataset.name,
+                        written: written,
+                        mcq: mcq,
+                        practical: practical,
+                        total: total
+                    });
+                }
             });
+
+            if (payload.length === 0) {
+                alert('সেভ করার জন্য কোনো তথ্য পাওয়া যায়নি!');
+                return;
+            }
 
             try {
                 alert('গুগল শিটে ডেটা পাঠানো হচ্ছে...');
