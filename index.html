@@ -54,11 +54,16 @@
     <main class="max-w-7xl mx-auto px-4 py-8 flex-grow w-full">
 
         <!-- বিদ্যালয় তথ্য ও শিক্ষার্থী পরিসংখ্যান ব্যানার (লগইন এর উপরে) -->
-        <div id="schoolInfoBanner" class="hidden max-w-md mx-auto mb-6 bg-white p-5 rounded-2xl shadow-lg border border-red-100 text-center">
-            <h2 id="bannerSchoolName" class="text-xl font-bold text-red-800">বিদ্যালয়ের নাম</h2>
-            <p id="bannerTotalStudents" class="text-xs text-gray-600 mt-1 font-semibold">মোট শিক্ষার্থী: ০ জন</p>
-            <div id="classWiseCount" class="flex flex-wrap justify-center gap-2 mt-3 pt-3 border-t text-xs">
-                <!-- ক্লাস অনুযায়ী শিক্ষার্থী সংখ্যা এখানে ডাইনামিকালি লোড হবে -->
+        <div id="schoolInfoBanner" class="hidden max-w-xl mx-auto mb-6 bg-white p-6 rounded-2xl shadow-xl border border-red-100 text-center space-y-2">
+            <h2 id="bannerSchoolName" class="text-2xl font-bold text-red-800">বিদ্যালয়ের নাম</h2>
+            <div id="bannerSchoolDetails" class="text-xs text-gray-500 font-medium flex flex-wrap justify-center gap-3">
+                <!-- EIIN, MPO ও ঠিকানা এখানে শো করবে -->
+            </div>
+            <div class="pt-2 border-t">
+                <p id="bannerTotalStudents" class="text-sm text-gray-700 font-bold">মোট শিক্ষার্থী: ০ জন</p>
+                <div id="classWiseCount" class="flex flex-wrap justify-center gap-2 mt-3 text-xs">
+                    <!-- ক্লাস অনুযায়ী শিক্ষার্থী সংখ্যা এখানে লোড হবে -->
+                </div>
             </div>
         </div>
 
@@ -247,32 +252,56 @@
             }
         }
 
-        // বিদ্যালয়ের নাম ও শিক্ষার্থী পরিসংখ্যান ব্যানার আপডেট ফাংশন
+        // বিদ্যালয়ের নাম, EIIN, MPO ও শিক্ষার্থী পরিসংখ্যান ব্যানার আপডেট ফাংশন
         function updateSchoolInfoBanner() {
             const banner = document.getElementById('schoolInfoBanner');
+            
+            // সেটিংস ডেটা চেক করা
+            let schoolName = "স্কুল রেজাল্ট পোর্টাল";
+            let eiin = "";
+            let mpo = "";
+            let thana = "";
+            let district = "";
+
+            if (masterData.settings && masterData.settings.length > 0) {
+                const s = masterData.settings[0];
+                schoolName = s.school_name || s.name || schoolName;
+                eiin = s.eiin_no ? `EIIN: ${s.eiin_no}` : "";
+                mpo = s.mpo_code ? `MPO Code: ${s.mpo_code}` : "";
+                thana = s.thana ? `থানা: ${s.thana}` : "";
+                district = s.district ? `জেলা: ${s.district}` : "";
+            }
+
+            document.getElementById('bannerSchoolName').innerText = schoolName;
+            document.getElementById('headerSchoolName').innerText = schoolName;
+
+            // ডিটেইলস ব্যাজ তৈরি
+            const detailsContainer = document.getElementById('bannerSchoolDetails');
+            detailsContainer.innerHTML = '';
+            [eiin, mpo, thana, district].forEach(item => {
+                if (item) {
+                    const span = document.createElement('span');
+                    span.className = "bg-red-50 text-red-700 px-2 py-0.5 rounded border border-red-100";
+                    span.innerText = item;
+                    detailsContainer.appendChild(span);
+                }
+            });
+
             if (!masterData.students || masterData.students.length === 0) {
-                banner.classList.add('hidden');
+                banner.classList.remove('hidden');
+                document.getElementById('bannerTotalStudents').innerText = "মোট শিক্ষার্থী: ০ জন (কোনো স্টুডেন্ট ডাটা পাওয়া যায়নি)";
+                document.getElementById('classWiseCount').innerHTML = '';
                 return;
             }
 
             banner.classList.remove('hidden');
 
-            // সেটিংস থেকে বিদ্যালয়ের নাম বের করা (নতুবা ডিফল্ট)[cite: 31]
-            let schoolName = "স্কুল রেজাল্ট পোর্টাল";
-            if (masterData.settings && masterData.settings.length > 0) {
-                schoolName = masterData.settings[0].school_name || masterData.settings[0].name || schoolName;
-            }
-            document.getElementById('bannerSchoolName').innerText = schoolName;
-            document.getElementById('headerSchoolName').innerText = schoolName;
-
-            // মোট শিক্ষার্থী গণনা
             const totalStudents = masterData.students.length;
             document.getElementById('bannerTotalStudents').innerText = `মোট শিক্ষার্থী: ${totalStudents} জন`;
 
-            // ক্লাস অনুযায়ী শিক্ষার্থী গণনা
             const classCounts = {};
-            masterData.students.forEach(s => {
-                const cls = String(s.school_class || s.class || "অন্যান্য").trim();
+            masterData.students.forEach(st => {
+                const cls = String(st.school_class || st.class || "অন্যান্য").trim();
                 classCounts[cls] = (classCounts[cls] || 0) + 1;
             });
 
@@ -281,7 +310,7 @@
 
             Object.keys(classCounts).sort((a,b) => a - b).forEach(cls => {
                 const badge = document.createElement('span');
-                badge.className = "bg-red-50 text-red-800 px-2.5 py-1 rounded-lg border border-red-200 font-semibold";
+                badge.className = "bg-gray-100 text-gray-800 px-2.5 py-1 rounded-lg border font-semibold";
                 badge.innerText = `শ্রেণী ${cls}: ${classCounts[cls]} জন`;
                 classWiseContainer.appendChild(badge);
             });
@@ -304,7 +333,7 @@
 
             if (teacher) {
                 currentTeacher = teacher;
-                document.getElementById('schoolInfoBanner').classList.add('hidden'); // লগইন করার পর ব্যানারটি হাইড হবে
+                document.getElementById('schoolInfoBanner').classList.add('hidden'); // লগইন করার পর ব্যানার হাইড হবে
                 document.getElementById('loginSection').classList.add('hidden');
                 document.getElementById('dashboardSection').classList.remove('hidden');
                 document.getElementById('userInfoSection').classList.remove('hidden');
