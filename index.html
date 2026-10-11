@@ -224,7 +224,11 @@
                 return;
             }
 
-            const teacher = masterData.teachers.find(t => String(t.username).trim() === uid && String(t.password).trim() === pass);
+            // শিক্ষকদের টেবিলে username অথবা index_no দিয়ে মেলানো হচ্ছে
+            const teacher = masterData.teachers.find(t => 
+                (String(t.username).trim() === uid || String(t.index_no).trim() === uid) && 
+                String(t.password).trim() === pass
+            );
 
             if (teacher) {
                 currentTeacher = teacher;
@@ -253,10 +257,14 @@
             const container = document.getElementById('assignmentsList');
             container.innerHTML = '';
 
-            const assignments = masterData.teacher_assignments.filter(a => String(a.teacher_id).trim() === String(currentTeacher.index_no).trim());
+            // শিক্ষক আইডি (যেমন: 5) অথবা ইনডেক্স নম্বর (যেমন: C268446) দিয়ে অ্যাসাইনমেন্ট ফিল্টার করা
+            const assignments = masterData.teacher_assignments.filter(a => 
+                String(a.teacher_id).trim() === String(currentTeacher.teacher_id).trim() ||
+                String(a.teacher_id).trim() === String(currentTeacher.index_no).trim()
+            );
 
             if (assignments.length === 0) {
-                container.innerHTML = `<p class="text-gray-500 col-span-3 text-center py-6">আপনার জন্য কোনো সাবজেক্ট অ্যাসাইন করা নেই।</p>`;
+                container.innerHTML = `<p class="text-gray-500 col-span-3 text-center py-6">আপনার জন্য কোনো সাবজেক্ট অ্যাসাইন করা নেই। (Teacher ID: ${currentTeacher.teacher_id || currentTeacher.index_no})</p>`;
                 return;
             }
 
