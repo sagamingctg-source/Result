@@ -27,8 +27,8 @@
                     🎓 SR
                 </div>
                 <div>
-                    <h1 class="text-xl md:text-2xl font-bold" id="headerSchoolName">স্কুল রেজাল্ট পোর্টাল</h1>
-                    <p class="text-xs text-red-200">ডিজিটাল রেজাল্ট এন্ট্রি ও গুগল শিট সিঙ্ক সিস্টেম</p>
+                    <h1 id="headerSchoolName" class="text-xl md:text-2xl font-bold">স্কুল রেজাল্ট পোর্টাল</h1>
+                    <p id="headerSchoolDetails" class="text-xs text-red-200">ডিজিটাল রেজাল্ট এন্ট্রি ও গুগল শিট সিঙ্ক সিস্টেম</p>
                 </div>
             </div>
 
@@ -65,7 +65,7 @@
             <form id="loginForm" onsubmit="handleLogin(event)" class="p-6 space-y-4">
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-1">ইউজার আইডি (USER ID / Username)</label>
-                    <input type="text" id="userId" required placeholder="যেমন: C268446" class="w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-red-600 focus:outline-none">
+                    <input type="text" id="userId" required placeholder="যেমন: C268446 বা 5" class="w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-red-600 focus:outline-none">
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-1">পাসওয়ার্ড (PASSWORD)</label>
@@ -77,17 +77,40 @@
             </form>
         </section>
 
-        <!-- ড্যাশবোর্ড ও রেজাল্ট ইনপুট সেকশন -->
+        <!-- ড্যাশবোর্ড (স্টেপ বাই স্টেপ ফিল্টারিং) -->
         <section id="dashboardSection" class="hidden space-y-6">
-            <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
-                <div>
-                    <h3 class="text-lg font-bold text-gray-800">আপনার অ্যাসাইনকৃত বিষয়সমূহ</h3>
-                    <p class="text-sm text-gray-500">নিচে আপনার ক্লাস ও সাবজেক্ট তালিকা থেকে বিষয় সিলেক্ট করুন</p>
+            <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 space-y-4">
+                <h3 class="text-lg font-bold text-gray-800">পরীক্ষা ও বিষয় নির্বাচন করুন</h3>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <!-- ১. পরীক্ষা -->
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">পরীক্ষার নাম:</label>
+                        <select id="examDropdown" onchange="onExamChange()" class="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-red-600 focus:outline-none text-sm bg-gray-50">
+                            <option value="">-- পরীক্ষা সিলেক্ট করুন --</option>
+                        </select>
+                    </div>
+                    <!-- ২. শ্রেণী -->
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">শ্রেণী (Class):</label>
+                        <select id="classDropdown" onchange="onClassChange()" disabled class="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-red-600 focus:outline-none text-sm bg-gray-50 disabled:bg-gray-100">
+                            <option value="">-- শ্রেণী সিলেক্ট করুন --</option>
+                        </select>
+                    </div>
+                    <!-- ৩. সেকশন -->
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">সেকশন (Section):</label>
+                        <select id="sectionDropdown" onchange="onSectionChange()" disabled class="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-red-600 focus:outline-none text-sm bg-gray-50 disabled:bg-gray-100">
+                            <option value="">-- সেকশন সিলেক্ট করুন --</option>
+                        </select>
+                    </div>
+                    <!-- ৪. বিষয় -->
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">বিষয় (Subject):</label>
+                        <select id="subjectDropdown" onchange="onSubjectChange()" disabled class="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-red-600 focus:outline-none text-sm bg-gray-50 disabled:bg-gray-100">
+                            <option value="">-- বিষয় সিলেক্ট করুন --</option>
+                        </select>
+                    </div>
                 </div>
-            </div>
-
-            <div id="assignmentsList" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <!-- ডাইনামিকালি লোড হবে -->
             </div>
 
             <!-- মার্কস এন্ট্রি প্যানেল -->
@@ -97,7 +120,6 @@
                         <h4 id="panelSubjectTitle" class="text-lg font-bold">বিষয়</h4>
                         <p id="panelDetails" class="text-xs text-red-200">ক্লাস ও সেকশন বিবরণ</p>
                     </div>
-                    <button onclick="closeMarksPanel()" class="bg-white/20 hover:bg-white/30 text-white px-3 py-1 rounded-lg text-sm transition">ফিরে যান</button>
                 </div>
 
                 <div class="p-6 overflow-x-auto">
@@ -107,10 +129,11 @@
                                 <th class="p-3 border">রোল</th>
                                 <th class="p-3 border">স্টুডেন্ট আইডি</th>
                                 <th class="p-3 border">নাম</th>
-                                <th class="p-3 border">ডিপার্টমেন্ট</th>
-                                <th class="p-3 border">লিখিত (Written)</th>
-                                <th class="p-3 border">MCQ</th>
-                                <th class="p-3 border">ব্যবহারিক (Practical)</th>
+                                <th class="p-3 border">ধর্ম / বিভাগ</th>
+                                <th class="p-3 border text-center">উপস্থিতি (Absent)</th>
+                                <th class="p-3 border written-th">লিখিত (Written)</th>
+                                <th class="p-3 border mcq-th">MCQ</th>
+                                <th class="p-3 border practical-th">ব্যবহারিক (Practical)</th>
                                 <th class="p-3 border">মোট নম্বর</th>
                             </tr>
                         </thead>
@@ -143,16 +166,36 @@
             teachers: [],
             teacher_assignments: [],
             students: [],
-            subject_marks_config: []
+            subject_marks_config: [],
+            settings: []
         };
 
         let currentTeacher = null;
         let activeAssignment = null;
+        let activeConfig = null;
 
         window.onload = function() {
             const savedUrl = localStorage.getItem('google_script_url') || '';
             document.getElementById('topScriptUrlInput').value = savedUrl;
+            updateHeaderSchoolInfo();
         };
+
+        function updateHeaderSchoolInfo() {
+            if (masterData.settings && masterData.settings.length > 0) {
+                const s = masterData.settings[0];
+                if (s.school_name) {
+                    document.getElementById('headerSchoolName').innerText = s.school_name;
+                }
+                let details = [];
+                if (s.eiin_no) details.push(`EIIN: ${s.eiin_no}`);
+                if (s.mpo_code) details.push(`MPO Code: ${s.mpo_code}`);
+                if (s.thana || s.district) details.push(`থানা: ${s.thana || ''}, জেলা: ${s.district || ''}`);
+                
+                if (details.length > 0) {
+                    document.getElementById('headerSchoolDetails').innerText = details.join(' | ');
+                }
+            }
+        }
 
         function saveTopScriptUrl() {
             const url = document.getElementById('topScriptUrlInput').value.trim();
@@ -171,7 +214,7 @@
                 return;
             }
 
-            alert('গুগল শিট থেকে ডেটা সিঙ্ক করা হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন...');
+            alert('গুগল শিট থেকে ডেটা সিঙ্ক করা হচ্ছে...');
 
             const callbackName = 'sync_callback_' + Math.round(Math.random() * 100000);
             window[callbackName] = function(response) {
@@ -181,6 +224,7 @@
                 if (response && response.status === "success") {
                     masterData = response.data;
                     localStorage.setItem('synced_master_data', JSON.stringify(masterData));
+                    updateHeaderSchoolInfo();
                     alert('সফলভাবে গুগল শিট থেকে সমস্ত ডেটা সিঙ্ক করা হয়েছে!');
                 } else {
                     alert('সিঙ্ক করতে সমস্যা হয়েছে: ' + (response.message || 'অজানা ত্রুটি'));
@@ -204,13 +248,14 @@
                 if (result.status === "success") {
                     masterData = result.data;
                     localStorage.setItem('synced_master_data', JSON.stringify(masterData));
+                    updateHeaderSchoolInfo();
                     alert('সফলভাবে সিঙ্ক সম্পন্ন হয়েছে!');
                 } else {
                     alert('ডেটা পাওয়া যায়নি।');
                 }
             } catch (err) {
                 console.error(err);
-                alert('সিঙ্ক করা সম্ভব হয়নি। Apps Script সঠিক ফরম্যাটে ডিপ্লয় করা আছে কিনা নিশ্চিত করুন।');
+                alert('সিঙ্ক করা সম্ভব হয়নি।');
             }
         }
 
@@ -220,13 +265,12 @@
             const pass = document.getElementById('password').value.trim();
 
             if (!masterData.teachers || masterData.teachers.length === 0) {
-                alert('কোনো শিক্ষক ডেটা পাওয়া যায়নি! অনুগ্রহ করে প্রথমে উপরের "🔄 শিট সিঙ্ক করুন" বোতামে ক্লিক করে ডেটা সিঙ্ক করে নিন।');
+                alert('কোনো শিক্ষক ডেটা পাওয়া যায়নি! প্রথমে শিট সিঙ্ক করুন।');
                 return;
             }
 
-            // শিক্ষকদের টেবিলে username অথবা index_no দিয়ে মেলানো হচ্ছে
             const teacher = masterData.teachers.find(t => 
-                (String(t.username).trim() === uid || String(t.index_no).trim() === uid) && 
+                (String(t.id).trim() === uid || String(t.username).trim() === uid || String(t.index_no).trim() === uid || String(t.teacher_id).trim() === uid) && 
                 String(t.password).trim() === pass
             );
 
@@ -238,7 +282,7 @@
                 document.getElementById('loggedTeacherName').innerText = teacher.name;
                 document.getElementById('loggedTeacherDesig').innerText = teacher.designation;
 
-                loadTeacherAssignments();
+                initExamDropdown();
             } else {
                 alert('ভুল ইউজার আইডি বা পাসওয়ার্ড!');
             }
@@ -246,95 +290,269 @@
 
         function logout() {
             currentTeacher = null;
-            document.getElementById('loginSection').classList.remove('hidden');
+            document.getElementById('loginSection').classList.add('hidden');
             document.getElementById('dashboardSection').classList.add('hidden');
             document.getElementById('userInfoSection').classList.add('hidden');
             document.getElementById('loginForm').reset();
             document.getElementById('marksEntryPanel').classList.add('hidden');
         }
 
-        function loadTeacherAssignments() {
-            const container = document.getElementById('assignmentsList');
-            container.innerHTML = '';
+        function initExamDropdown() {
+            const examDropdown = document.getElementById('examDropdown');
+            examDropdown.innerHTML = '<option value="">-- পরীক্ষা সিলেক্ট করুন --</option>';
 
-            // শিক্ষক আইডি (যেমন: 5) অথবা ইনডেক্স নম্বর (যেমন: C268446) দিয়ে অ্যাসাইনমেন্ট ফিল্টার করা
-            const assignments = masterData.teacher_assignments.filter(a => 
-                String(a.teacher_id).trim() === String(currentTeacher.teacher_id).trim() ||
-                String(a.teacher_id).trim() === String(currentTeacher.index_no).trim()
-            );
+            const tId = String(currentTeacher.id || "").trim();
+            const tIndex = String(currentTeacher.index_no || "").trim();
+            const tTeacherId = String(currentTeacher.teacher_id || "").trim();
 
-            if (assignments.length === 0) {
-                container.innerHTML = `<p class="text-gray-500 col-span-3 text-center py-6">আপনার জন্য কোনো সাবজেক্ট অ্যাসাইন করা নেই। (Teacher ID: ${currentTeacher.teacher_id || currentTeacher.index_no})</p>`;
+            // শিক্ষক আইডি (id, index_no বা teacher_id) এর সাথে teacher_assignments এর teacher_id ম্যাচ করা হচ্ছে
+            const assignments = masterData.teacher_assignments.filter(a => {
+                const assignTeacherId = String(a.teacher_id || "").trim();
+                return assignTeacherId === tId || assignTeacherId === tIndex || assignTeacherId === tTeacherId;
+            });
+
+            window.teacherAssignments = assignments;
+
+            const exams = [...new Set(assignments.map(a => a.exam_type))];
+            exams.forEach(exam => {
+                if (exam) {
+                    const opt = document.createElement('option');
+                    opt.value = exam;
+                    opt.text = exam;
+                    examDropdown.add(opt);
+                }
+            });
+        }
+
+        function onExamChange() {
+            const examVal = document.getElementById('examDropdown').value;
+            const classDropdown = document.getElementById('classDropdown');
+            classDropdown.innerHTML = '<option value="">-- শ্রেণী সিলেক্ট করুন --</option>';
+            classDropdown.disabled = !examVal;
+
+            document.getElementById('sectionDropdown').innerHTML = '<option value="">-- সেকশন সিলেক্ট করুন --</option>';
+            document.getElementById('sectionDropdown').disabled = true;
+            document.getElementById('subjectDropdown').innerHTML = '<option value="">-- বিষয় সিলেক্ট করুন --</option>';
+            document.getElementById('subjectDropdown').disabled = true;
+            document.getElementById('marksEntryPanel').classList.add('hidden');
+
+            if (!examVal) return;
+
+            const filtered = window.teacherAssignments.filter(a => a.exam_type === examVal);
+            const classes = [...new Set(filtered.map(a => String(a.class_name)))];
+            classes.forEach(cls => {
+                const opt = document.createElement('option');
+                opt.value = cls;
+                opt.text = `শ্রেণী: ${cls}`;
+                classDropdown.add(opt);
+            });
+            window.currentExamAssignments = filtered;
+        }
+
+        function onClassChange() {
+            const classVal = document.getElementById('classDropdown').value;
+            const sectionDropdown = document.getElementById('sectionDropdown');
+            sectionDropdown.innerHTML = '<option value="">-- সেকশন সিলেক্ট করুন --</option>';
+            sectionDropdown.disabled = !classVal;
+
+            document.getElementById('subjectDropdown').innerHTML = '<option value="">-- বিষয় সিলেক্ট করুন --</option>';
+            document.getElementById('subjectDropdown').disabled = true;
+            document.getElementById('marksEntryPanel').classList.add('hidden');
+
+            if (!classVal) return;
+
+            const filtered = window.currentExamAssignments.filter(a => String(a.class_name) === classVal);
+            const sections = [...new Set(filtered.map(a => String(a.section_name || a.section)))];
+            sections.forEach(sec => {
+                const opt = document.createElement('option');
+                opt.value = sec;
+                opt.text = `সেকশন: ${sec}`;
+                sectionDropdown.add(opt);
+            });
+            window.currentClassAssignments = filtered;
+        }
+
+        function onSectionChange() {
+            const secVal = document.getElementById('sectionDropdown').value;
+            const subjectDropdown = document.getElementById('subjectDropdown');
+            subjectDropdown.innerHTML = '<option value="">-- বিষয় সিলেক্ট করুন --</option>';
+            subjectDropdown.disabled = !secVal;
+            document.getElementById('marksEntryPanel').classList.add('hidden');
+
+            if (!secVal) return;
+
+            const filtered = window.currentClassAssignments.filter(a => String(a.section_name || a.section) === secVal);
+            filtered.forEach((assign, idx) => {
+                const opt = document.createElement('option');
+                opt.value = idx;
+                opt.text = `${assign.subject_name} (কোড: ${assign.subject_code})`;
+                subjectDropdown.add(opt);
+            });
+            window.currentSectionAssignments = filtered;
+        }
+
+        function onSubjectChange() {
+            const subIdx = document.getElementById('subjectDropdown').value;
+            if (subIdx === "") {
+                document.getElementById('marksEntryPanel').classList.add('hidden');
                 return;
             }
-
-            assignments.forEach(assign => {
-                const card = document.createElement('div');
-                card.className = "bg-white p-5 rounded-xl shadow border border-red-50 hover:border-red-300 transition cursor-pointer flex flex-col justify-between";
-                card.onclick = () => openMarksEntry(assign);
-                card.innerHTML = `
-                    <div>
-                        <span class="bg-red-100 text-red-800 text-xs px-2.5 py-1 rounded-full font-bold">${assign.exam_type}</span>
-                        <h4 class="text-lg font-bold text-gray-800 mt-2">${assign.subject_name}</h4>
-                        <p class="text-xs text-gray-500 mt-1">কোড: ${assign.subject_code} | খাতা: ${assign.answer_scripts} টি</p>
-                    </div>
-                    <div class="mt-4 pt-3 border-t flex justify-between items-center text-sm font-semibold text-red-700">
-                        <span>ক্লাস: ${assign.class_name} (${assign.section})</span>
-                        <span>নম্বর ইনপুট দিন &rarr;</span>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
+            const assign = window.currentSectionAssignments[subIdx];
+            openMarksEntry(assign);
         }
 
         function openMarksEntry(assign) {
             activeAssignment = assign;
             document.getElementById('marksEntryPanel').classList.remove('hidden');
             document.getElementById('panelSubjectTitle').innerText = `বিষয়: ${assign.subject_name} (কোড: ${assign.subject_code})`;
-            document.getElementById('panelDetails').innerText = `ক্লাস: ${assign.class_name} | সেকশন: ${assign.section} | পরীক্ষা: ${assign.exam_type}`;
+            document.getElementById('panelDetails').innerText = `ক্লাস: ${assign.class_name} | সেকশন: ${assign.section_name || assign.section} | পরীক্ষা: ${assign.exam_type}`;
+
+            activeConfig = masterData.subject_marks_config.find(c => 
+                String(c.class_name).trim() === String(assign.class_name).trim() && 
+                String(c.subject_code).trim() === String(assign.subject_code).trim()
+            ) || { written_marks: 100, mcq_marks: 0, practical_marks: 0 };
+
+            const maxW = Number(activeConfig.written_marks || 0);
+            const maxM = Number(activeConfig.mcq_marks || 0);
+            const maxP = Number(activeConfig.practical_marks || 0);
+
+            const hasWritten = maxW > 0;
+            const hasMcq = maxM > 0;
+            const hasPractical = maxP > 0;
+
+            document.querySelector('.written-th').style.display = hasWritten ? '' : 'none';
+            document.querySelector('.mcq-th').style.display = hasMcq ? '' : 'none';
+            document.querySelector('.practical-th').style.display = hasPractical ? '' : 'none';
 
             const tbody = document.getElementById('studentMarksTableBody');
             tbody.innerHTML = '';
 
-            let students = masterData.students.filter(s => String(s.class).trim() === String(assign.class_name).trim() && String(s.section).trim() === String(assign.section).trim());
+            const reqClass = String(assign.class_name).trim();
+            const reqSec = String(assign.section_name || assign.section).trim();
+            const subjCode = String(assign.subject_code).trim();
+            const subjName = String(assign.subject_name).trim();
 
-            if (assign.subject_code === "146") {
-                students = students.filter(s => s.department === "ব্যবসায়");
+            let students = masterData.students.filter(s => {
+                const sClass = String(s.school_class || s.class || "").trim();
+                const sSec = String(s.section || "").trim();
+                return sClass === reqClass && sSec === reqSec;
+            });
+
+            if (subjCode === "111" || subjName.includes("ইসলাম")) {
+                students = students.filter(s => String(s.religion || "").trim().includes("ইসলাম"));
+            } else if (subjCode === "112" || subjName.includes("হিন্দু")) {
+                students = students.filter(s => String(s.religion || "").trim().includes("হিন্দু"));
+            } else if (subjCode === "113" || subjName.includes("বৌদ্ধ")) {
+                students = students.filter(s => String(s.religion || "").trim().includes("বৌদ্ধ"));
+            } else if (subjCode === "114" || subjName.includes("খ্রিস্ট")) {
+                students = students.filter(s => String(s.religion || "").trim().includes("খ্রিস্ট"));
+            }
+
+            if (reqClass === "9" || reqClass === "10") {
+                if (subjCode === "136" || subjCode === "137" || subjCode === "138" || subjCode === "150") {
+                    students = students.filter(s => String(s.department || "").trim() === "বিজ্ঞান");
+                } 
+                else if (subjCode === "153" || subjCode === "110" || subjCode === "141" || subjCode === "140") {
+                    students = students.filter(s => String(s.department || "").trim() === "মানবিক");
+                } 
+                else if (subjCode === "146" || subjCode === "143" || subjCode === "152" || subjName.includes("হিসাববিজ্ঞান") || subjName.includes("ফিন্যান্স")) {
+                    students = students.filter(s => {
+                        const dept = String(s.department || "").trim();
+                        return dept.includes("ব্যবসায়") || dept.includes("ব্যবসায়") || dept.includes("ব্যবসা");
+                    });
+                } 
+                else if (subjCode === "127") {
+                    students = students.filter(s => {
+                        const dept = String(s.department || "").trim();
+                        return dept === "মানবিক" || dept.includes("ব্যবসায়") || dept.includes("ব্যবসায়") || dept.includes("ব্যবসা");
+                    });
+                } 
+                else if (subjCode === "126" || subjName.includes("উচ্চতর গণিত")) {
+                    students = students.filter(s => {
+                        const opt = String(s.optional_subject || "").trim();
+                        const dept = String(s.department || "").trim();
+                        return opt.includes("উচ্চতর গণিত") || dept === "বিজ্ঞান";
+                    });
+                } 
+                else if (subjCode === "151" || subjName.includes("গার্হস্থ্য")) {
+                    students = students.filter(s => String(s.optional_subject || "").trim().includes("গার্হস্থ্য"));
+                }
+            }
+
+            students.sort((a, b) => Number(a.roll) - Number(b.roll));
+
+            if (students.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" class="text-center py-6 text-gray-400">এই বিষয়ের জন্য কোনো স্টুডেন্ট পাওয়া যায়নি।</td></tr>`;
+                return;
             }
 
             const savedMarks = JSON.parse(localStorage.getItem('saved_student_marks') || "{}");
 
             students.forEach((stu) => {
-                const key = `${assign.class_name}_${assign.section}_${stu.roll}_${assign.subject_code}`;
-                const existing = savedMarks[key] || { written: '', mcq: '', practical: '' };
+                const mainStudentId = stu.id || stu.student_id || stu.roll;
+                const key = `${assign.class_name}_${assign.section_name || assign.section}_${stu.roll}_${assign.subject_code}`;
+                const existing = savedMarks[key] || { written: '', mcq: '', practical: '', absent: false };
+
+                const relText = stu.religion ? stu.religion : '';
+                const deptText = stu.department && stu.department !== "nan" ? ` | ${stu.department}` : '';
 
                 const tr = document.createElement('tr');
                 tr.className = "border-b hover:bg-gray-50";
                 tr.innerHTML = `
                     <td class="p-3 border font-bold text-gray-700">${stu.roll}</td>
-                    <td class="p-3 border text-xs text-gray-500">${stu.student_id}</td>
+                    <td class="p-3 border font-mono text-xs text-red-700 font-bold">${mainStudentId}</td>
                     <td class="p-3 border font-semibold text-gray-800">${stu.name}</td>
-                    <td class="p-3 border"><span class="bg-gray-100 px-2 py-0.5 rounded text-xs">${stu.department}</span></td>
-                    <td class="p-3 border"><input type="number" data-roll="${stu.roll}" data-id="${stu.student_id}" data-name="${stu.name}" class="w-20 p-1.5 border rounded text-center written-input focus:ring-1 focus:ring-red-600" value="${existing.written}" placeholder="0" oninput="calculateTotal(this)"></td>
-                    <td class="p-3 border"><input type="number" class="w-20 p-1.5 border rounded text-center mcq-input focus:ring-1 focus:ring-red-600" value="${existing.mcq}" placeholder="0" oninput="calculateTotal(this)"></td>
-                    <td class="p-3 border"><input type="number" class="w-20 p-1.5 border rounded text-center practical-input focus:ring-1 focus:ring-red-600" value="${existing.practical}" placeholder="0" oninput="calculateTotal(this)"></td>
-                    <td class="p-3 border font-bold text-red-700 total-val">${Number(existing.written || 0) + Number(existing.mcq || 0) + Number(existing.practical || 0)}</td>
+                    <td class="p-3 border text-xs"><span class="bg-gray-100 px-2 py-0.5 rounded">${relText}${deptText}</span></td>
+                    <td class="p-3 border text-center"><input type="checkbox" class="absent-chk w-4 h-4 text-red-600 rounded" ${existing.absent ? 'checked' : ''} onchange="toggleAbsent(this)"></td>
+                    <td class="p-3 border written-td" style="${hasWritten ? '' : 'display:none;'}">
+                        <input type="number" min="0" max="${maxW}" data-roll="${stu.roll}" data-main-id="${mainStudentId}" data-name="${stu.name}" class="w-20 p-1.5 border rounded text-center written-input focus:ring-1 focus:ring-red-600" value="${existing.written}" placeholder="Max: ${maxW}" ${existing.absent ? 'disabled' : ''} oninput="validateAndCalculate(this, ${maxW})">
+                    </td>
+                    <td class="p-3 border mcq-td" style="${hasMcq ? '' : 'display:none;'}">
+                        <input type="number" min="0" max="${maxM}" class="w-20 p-1.5 border rounded text-center mcq-input focus:ring-1 focus:ring-red-600" value="${existing.mcq}" placeholder="Max: ${maxM}" ${existing.absent ? 'disabled' : ''} oninput="validateAndCalculate(this, ${maxM})">
+                    </td>
+                    <td class="p-3 border practical-td" style="${hasPractical ? '' : 'display:none;'}">
+                        <input type="number" min="0" max="${maxP}" class="w-20 p-1.5 border rounded text-center practical-input focus:ring-1 focus:ring-red-600" value="${existing.practical}" placeholder="Max: ${maxP}" ${existing.absent ? 'disabled' : ''} oninput="validateAndCalculate(this, ${maxP})">
+                    </td>
+                    <td class="p-3 border font-bold text-red-700 total-val">${existing.absent ? 'Absent' : (Number(existing.written || 0) + Number(existing.mcq || 0) + Number(existing.practical || 0))}</td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        function calculateTotal(el) {
-            const row = el.closest('tr');
-            const w = parseFloat(row.querySelector('.written-input').value) || 0;
-            const m = parseFloat(row.querySelector('.mcq-input').value) || 0;
-            const p = parseFloat(row.querySelector('.practical-input').value) || 0;
-            row.querySelector('.total-val').innerText = w + m + p;
+        function toggleAbsent(chk) {
+            const row = chk.closest('tr');
+            const inputs = row.querySelectorAll('input[type="number"]');
+            inputs.forEach(inp => {
+                inp.disabled = chk.checked;
+                if (chk.checked) inp.value = '';
+            });
+            row.querySelector('.total-val').innerText = chk.checked ? 'Absent' : '0';
         }
 
-        function closeMarksPanel() {
-            document.getElementById('marksEntryPanel').classList.add('hidden');
-            activeAssignment = null;
+        function validateAndCalculate(inputEl, maxLimit) {
+            let val = parseFloat(inputEl.value);
+            if (!isNaN(val)) {
+                if (val > maxLimit) {
+                    alert(`সর্বোচ্চ নম্বর ${maxLimit}-এর বেশি দেওয়া যাবে না!`);
+                    inputEl.value = maxLimit;
+                } else if (val < 0) {
+                    inputEl.value = 0;
+                }
+            }
+            calculateTotal(inputEl);
+        }
+
+        function calculateTotal(el) {
+            const row = el.closest('tr');
+            const wInput = row.querySelector('.written-input');
+            const mInput = row.querySelector('.mcq-input');
+            const pInput = row.querySelector('.practical-input');
+
+            const w = wInput && !wInput.disabled ? parseFloat(wInput.value) || 0 : 0;
+            const m = mInput && !mInput.disabled ? parseFloat(mInput.value) || 0 : 0;
+            const p = pInput && !pInput.disabled ? parseFloat(pInput.value) || 0 : 0;
+
+            row.querySelector('.total-val').innerText = w + m + p;
         }
 
         function saveMarksLocally() {
@@ -342,13 +560,17 @@
             const savedMarks = JSON.parse(localStorage.getItem('saved_student_marks') || "{}");
 
             rows.forEach(row => {
-                const written = row.querySelector('.written-input').value;
-                const mcq = row.querySelector('.mcq-input').value;
-                const practical = row.querySelector('.practical-input').value;
-                const roll = row.querySelector('.written-input').dataset.roll;
+                const writtenInput = row.querySelector('.written-input');
+                if (writtenInput) {
+                    const absent = row.querySelector('.absent-chk').checked;
+                    const written = absent ? '' : writtenInput.value;
+                    const mcq = absent ? '' : (row.querySelector('.mcq-input') ? row.querySelector('.mcq-input').value : '');
+                    const practical = absent ? '' : (row.querySelector('.practical-input') ? row.querySelector('.practical-input').value : '');
+                    const roll = writtenInput.dataset.roll;
 
-                const key = `${activeAssignment.class_name}_${activeAssignment.section}_${roll}_${activeAssignment.subject_code}`;
-                savedMarks[key] = { written, mcq, practical };
+                    const key = `${activeAssignment.class_name}_${activeAssignment.section_name || activeAssignment.section}_${roll}_${activeAssignment.subject_code}`;
+                    savedMarks[key] = { written, mcq, practical, absent };
+                }
             });
 
             localStorage.setItem('saved_student_marks', JSON.stringify(savedMarks));
@@ -367,25 +589,37 @@
 
             rows.forEach(row => {
                 const writtenInput = row.querySelector('.written-input');
-                const written = parseFloat(writtenInput.value) || 0;
-                const mcq = parseFloat(row.querySelector('.mcq-input').value) || 0;
-                const practical = parseFloat(row.querySelector('.practical-input').value) || 0;
-                const total = written + mcq + practical;
+                if (writtenInput) {
+                    const absent = row.querySelector('.absent-chk').checked;
+                    const written = absent ? 0 : (parseFloat(writtenInput.value) || 0);
+                    const mcqInput = row.querySelector('.mcq-input');
+                    const mcq = absent || !mcqInput ? 0 : (parseFloat(mcqInput.value) || 0);
+                    const practicalInput = row.querySelector('.practical-input');
+                    const practical = absent || !practicalInput ? 0 : (parseFloat(practicalInput.value) || 0);
+                    const total = absent ? 0 : (written + mcq + practical);
 
-                payload.push({
-                    exam_name: activeAssignment.exam_type,
-                    class_name: activeAssignment.class_name,
-                    section: activeAssignment.section,
-                    roll: writtenInput.dataset.roll,
-                    subject_code: activeAssignment.subject_code,
-                    subject_name: activeAssignment.subject_name,
-                    name: writtenInput.dataset.name,
-                    written: written,
-                    mcq: mcq,
-                    practical: practical,
-                    total: total
-                });
+                    payload.push({
+                        exam_name: activeAssignment.exam_type,
+                        class_name: activeAssignment.class_name,
+                        section: activeAssignment.section_name || activeAssignment.section,
+                        roll: writtenInput.dataset.roll,
+                        student_id: writtenInput.dataset.mainId,
+                        subject_code: activeAssignment.subject_code,
+                        subject_name: activeAssignment.subject_name,
+                        name: writtenInput.dataset.name,
+                        written: written,
+                        mcq: mcq,
+                        practical: practical,
+                        total: total,
+                        absent: absent ? "YES" : "NO"
+                    });
+                }
             });
+
+            if (payload.length === 0) {
+                alert('সেভ করার জন্য কোনো তথ্য পাওয়া যায়নি!');
+                return;
+            }
 
             try {
                 alert('গুগল শিটে ডেটা পাঠানো হচ্ছে...');
@@ -399,7 +633,7 @@
                 alert('সফলভাবে ডেটা গুগল স্প্রেডশিটে ট্রান্সমিট করা হয়েছে!');
             } catch (error) {
                 console.error(error);
-                alert('ত্রুটি: ডেটা পাঠানো সম্ভব হয়নি। অনুগ্রহ করে ইউআরএল চেক করুন।');
+                alert('ত্রুটি: ডেটা পাঠানো সম্ভব হয়নি।');
             }
         }
     </script>
