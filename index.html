@@ -162,6 +162,9 @@
 
     <!-- স্ক্রিপ্ট লজিক -->
     <script>
+        // আপনার গুগল অ্যাপস স্ক্রিপ্টের ওয়েব অ্যাপ ইউআরএলটি এখানে সরাসরি বসিয়ে দিন
+        const DEFAULT_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyzoQin5WlI7ke453lKk6RxLwlU12RsQmAAdE3YcbAzVQuSTXbpOVb8HnZOnVCbih7arw/exec";
+
         let masterData = JSON.parse(localStorage.getItem('synced_master_data')) || {
             teachers: [],
             teacher_assignments: [],
@@ -175,9 +178,18 @@
         let activeConfig = null;
 
         window.onload = function() {
-            const savedUrl = localStorage.getItem('google_script_url') || '';
+            let savedUrl = localStorage.getItem('google_script_url');
+            if (!savedUrl) {
+                savedUrl = DEFAULT_SCRIPT_URL;
+                localStorage.setItem('google_script_url', savedUrl);
+            }
             document.getElementById('topScriptUrlInput').value = savedUrl;
             updateHeaderSchoolInfo();
+
+            // অন্য ডিভাইসগুলোতে প্রথমবার ওপেন করার সাথে সাথে অটোমেটিক সিঙ্ক করার জন্য
+            if (!masterData.teachers || masterData.teachers.length === 0) {
+                syncFromGoogleSheet();
+            }
         };
 
         function updateHeaderSchoolInfo() {
@@ -208,13 +220,11 @@
         }
 
         function syncFromGoogleSheet() {
-            const scriptUrl = localStorage.getItem('google_script_url');
-            if (!scriptUrl) {
-                alert('দয়া করে প্রথমে উপরের বক্সে Apps Script URL দিন এবং সেভ করুন!');
+            const scriptUrl = document.getElementById('topScriptUrlInput').value.trim() || localStorage.getItem('google_script_url') || DEFAULT_SCRIPT_URL;
+            if (!scriptUrl || scriptUrl.includes("YOUR_DEPLOYED_SCRIPT_URL")) {
+                alert('দয়া করে প্রথমে সঠিক Apps Script URL দিন!');
                 return;
             }
-
-            alert('গুগল শিট থেকে ডেটা সিঙ্ক করা হচ্ছে...');
 
             const callbackName = 'sync_callback_' + Math.round(Math.random() * 100000);
             window[callbackName] = function(response) {
@@ -225,9 +235,8 @@
                     masterData = response.data;
                     localStorage.setItem('synced_master_data', JSON.stringify(masterData));
                     updateHeaderSchoolInfo();
-                    alert('সফলভাবে গুগল শিট থেকে সমস্ত ডেটা সিঙ্ক করা হয়েছে!');
                 } else {
-                    alert('সিঙ্ক করতে সমস্যা হয়েছে: ' + (response.message || 'অজানা ত্রুটি'));
+                    console.error('সিঙ্ক করতে সমস্যা হয়েছে: ' + (response.message || 'অজানা ত্রুটি'));
                 }
             };
 
@@ -249,13 +258,9 @@
                     masterData = result.data;
                     localStorage.setItem('synced_master_data', JSON.stringify(masterData));
                     updateHeaderSchoolInfo();
-                    alert('সফলভাবে সিঙ্ক সম্পন্ন হয়েছে!');
-                } else {
-                    alert('ডেটা পাওয়া যায়নি।');
                 }
             } catch (err) {
                 console.error(err);
-                alert('সিঙ্ক করা সম্ভব হয়নি।');
             }
         }
 
@@ -265,7 +270,8 @@
             const pass = document.getElementById('password').value.trim();
 
             if (!masterData.teachers || masterData.teachers.length === 0) {
-                alert('কোনো শিক্ষক ডেটা পাওয়া যায়নি! প্রথমে শিট সিঙ্ক করুন।');
+                alert('কোনো শিক্ষক ডেটা পাওয়া যায়নি! দয়া করে কিছুক্ষণ অপেক্ষা করুন অথবা শিট সিঙ্ক করুন।');
+                syncFromGoogleSheet();
                 return;
             }
 
@@ -305,7 +311,6 @@
             const tIndex = String(currentTeacher.index_no || "").trim();
             const tTeacherId = String(currentTeacher.teacher_id || "").trim();
 
-            // শিক্ষক আইডি (id, index_no বা teacher_id) এর সাথে teacher_assignments এর teacher_id ম্যাচ করা হচ্ছে
             const assignments = masterData.teacher_assignments.filter(a => {
                 const assignTeacherId = String(a.teacher_id || "").trim();
                 return assignTeacherId === tId || assignTeacherId === tIndex || assignTeacherId === tTeacherId;
@@ -578,9 +583,9 @@
         }
 
         async function sendToGoogleSpreadsheet() {
-            const scriptUrl = localStorage.getItem('google_script_url');
+            const scriptUrl = localStorage.getItem('google_script_url') || DEFAULT_SCRIPT_URL;
             if (!scriptUrl) {
-                alert('দয়া করে প্রথমে উপরের বক্সে Apps Script URL দিন এবং সেভ করুন!');
+                alert('দয়া করে প্রথমে সঠিক Apps Script URL দিন!');
                 return;
             }
 
@@ -589,7 +594,7 @@
 
             rows.forEach(row => {
                 const writtenInput = row.querySelector('.written-input');
-                if (writtenInput) {
+                if, (writtenInput) {
                     const absent = row.querySelector('.absent-chk').checked;
                     const written = absent ? 0 : (parseFloat(writtenInput.value) || 0);
                     const mcqInput = row.querySelector('.mcq-input');
