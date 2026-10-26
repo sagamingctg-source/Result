@@ -162,7 +162,6 @@
 
     <!-- স্ক্রিপ্ট লজিক -->
     <script>
-        // আপনার গুগল অ্যাপস স্ক্রিপ্টের ওয়েব অ্যাপ ইউআরএলটি এখানে সরাসরি বসিয়ে দিন
         const DEFAULT_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyzoQin5WlI7ke453lKk6RxLwlU12RsQmAAdE3YcbAzVQuSTXbpOVb8HnZOnVCbih7arw/exec";
 
         let masterData = JSON.parse(localStorage.getItem('synced_master_data')) || {
@@ -186,7 +185,6 @@
             document.getElementById('topScriptUrlInput').value = savedUrl;
             updateHeaderSchoolInfo();
 
-            // অন্য ডিভাইসগুলোতে প্রথমবার ওপেন করার সাথে সাথে অটোমেটিক সিঙ্ক করার জন্য
             if (!masterData.teachers || masterData.teachers.length === 0) {
                 syncFromGoogleSheet();
             }
@@ -221,7 +219,7 @@
 
         function syncFromGoogleSheet() {
             const scriptUrl = document.getElementById('topScriptUrlInput').value.trim() || localStorage.getItem('google_script_url') || DEFAULT_SCRIPT_URL;
-            if (!scriptUrl || scriptUrl.includes("YOUR_DEPLOYED_SCRIPT_URL")) {
+            if (!scriptUrl) {
                 alert('দয়া করে প্রথমে সঠিক Apps Script URL দিন!');
                 return;
             }
@@ -594,7 +592,7 @@
 
             rows.forEach(row => {
                 const writtenInput = row.querySelector('.written-input');
-                if, (writtenInput) {
+                if (writtenInput) {
                     const absent = row.querySelector('.absent-chk').checked;
                     const written = absent ? 0 : (parseFloat(writtenInput.value) || 0);
                     const mcqInput = row.querySelector('.mcq-input');
