@@ -452,7 +452,18 @@
             }
 
             if (reqClass === "9" || reqClass === "10") {
-                if (subjCode === "136" || subjCode === "137" || subjCode === "138" || subjCode === "150") {
+                // বাংলাদেশ ও বিশ্বপরিচয় সাবজেক্টের ক্ষেত্রে শুধু সায়েন্সের ছাত্রছাত্রী ফিল্টার করা
+                if (subjCode === "150" || subjName.includes("বাংলাদেশ ও বিশ্বপরিচয়") || subjName.includes("বাংলাদেশ ও বিশ্ব পরিচয়")) {
+                    students = students.filter(s => String(s.department || "").trim() === "বিজ্ঞান");
+                } 
+                // সাধারণ বিজ্ঞান সাবজেক্টের ক্ষেত্রে মানবিক এবং ব্যবসায় শাখার ছাত্রছাত্রী ফিল্টার করা
+                else if (subjCode === "127" || subjName.match(/^বিজ্ঞান\s*(—|-).*$/) || subjName === "বিজ্ঞান") {
+                    students = students.filter(s => {
+                        const dept = String(s.department || "").trim();
+                        return dept === "মানবিক" || dept.includes("ব্যবসায়") || dept.includes("ব্যবসায়") || dept.includes("ব্যবসা");
+                    });
+                }
+                else if (subjCode === "136" || subjCode === "137" || subjCode === "138") {
                     students = students.filter(s => String(s.department || "").trim() === "বিজ্ঞান");
                 } 
                 else if (subjCode === "153" || subjCode === "110" || subjCode === "141" || subjCode === "140") {
@@ -462,12 +473,6 @@
                     students = students.filter(s => {
                         const dept = String(s.department || "").trim();
                         return dept.includes("ব্যবসায়") || dept.includes("ব্যবসায়") || dept.includes("ব্যবসা");
-                    });
-                } 
-                else if (subjCode === "127") {
-                    students = students.filter(s => {
-                        const dept = String(s.department || "").trim();
-                        return dept === "মানবিক" || dept.includes("ব্যবসায়") || dept.includes("ব্যবসায়") || dept.includes("ব্যবসা");
                     });
                 } 
                 else if (subjCode === "126" || subjName.includes("উচ্চতর গণিত")) {
