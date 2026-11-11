@@ -675,10 +675,17 @@
             }
         }
 
-        // প্রিন্ট প্রিভিউ উইন্ডো তৈরি করার ফাংশন
+        // সংশোধিত প্রিন্ট প্রিভিউ উইন্ডো তৈরি করার ফাংশন
         function openPrintPreview() {
             if (!activeAssignment || !currentTeacher) {
                 alert('প্রথমে পরীক্ষা, শ্রেণী, সেকশন ও বিষয় নির্বাচন করুন!');
+                return;
+            }
+
+            // ১. আগে উইন্ডো পয়েন্টার নেওয়া
+            const printWindow = window.open('', '_blank');
+            if (!printWindow) {
+                alert('আপনার ব্রাউজার পপআপ ব্লক করেছে! দয়া করে পপআপ Allow করে আবার চেষ্টা করুন।');
                 return;
             }
 
@@ -721,7 +728,7 @@
                 }
             });
 
-            const printWindow = window.open('', '_blank');
+            // ২. কন্টেন্ট ডাইনামিকালি রাইট করা
             printWindow.document.write(`
                 <!DOCTYPE html>
                 <html lang="bn">
@@ -747,7 +754,7 @@
                 <body>
                     <div class="header-box text-center">
                         <h2 style="margin: 0; color: #991b1b; font-size: 22px;">${schoolName}</h2>
-                        <p style="margin: 4px 0; font-size: 13px; color: #555;">${eiin_no} ${mpo_code ? '| ' + mpo_code : ''} ${address ? '| ' + address : ''}</p>
+                        <p style="margin: 4px 0; font-size: 13px; color: #555;">${eiinNo} ${mpoCode ? '| ' + mpoCode : ''} ${address ? '| ' + address : ''}</p>
                         <h3 style="margin: 8px 0 0 0; font-size: 16px; background: #fee2e2; display: inline-block; padding: 3px 15px; border-radius: 4px; color: #7f1d1d;">বিষয়ভিত্তিক ফলাফল বিবরণী</h3>
                     </div>
 
