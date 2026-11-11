@@ -15,6 +15,11 @@
         .bg-primary-red {
             background: linear-gradient(135deg, #991b1b 0%, #7f1d1d 100%);
         }
+        @media print {
+            body { background: white; }
+            header, footer, .no-print { display: none !important; }
+            .print-container { width: 100%; padding: 0; margin: 0; box-shadow: none; }
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between">
@@ -143,20 +148,25 @@
                     </table>
                 </div>
 
-                <div class="p-4 bg-gray-50 border-t flex justify-end gap-3">
-                    <button onclick="saveMarksLocally()" class="bg-gray-600 hover:bg-gray-700 text-white px-5 py-2.5 rounded-xl font-semibold shadow transition">
-                        💾 সেভ লোকালি
+                <div class="p-4 bg-gray-50 border-t flex flex-wrap justify-between items-center gap-3">
+                    <button onclick="openPrintPreview()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-semibold shadow transition flex items-center gap-2">
+                        🖨️ প্রিন্ট প্রিভিউ দেখুন
                     </button>
-                    <button onclick="sendToGoogleSpreadsheet()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-xl font-bold shadow-lg transition flex items-center gap-2">
-                        🚀 সেন্ড টু স্প্রেডশিট (Google Sheets)
-                    </button>
+                    <div class="flex gap-3">
+                        <button onclick="saveMarksLocally()" class="bg-gray-600 hover:bg-gray-700 text-white px-5 py-2.5 rounded-xl font-semibold shadow transition">
+                            💾 সেভ লোকালি
+                        </button>
+                        <button onclick="sendToGoogleSpreadsheet()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-xl font-bold shadow-lg transition flex items-center gap-2">
+                            🚀 সেন্ড টু স্প্রেডশিট (Google Sheets)
+                        </button>
+                    </div>
                 </div>
             </div>
         </section>
     </main>
 
     <!-- ফুটার -->
-    <footer class="bg-gray-800 text-gray-400 py-4 text-center text-xs mt-10">
+    <footer class="bg-gray-800 text-gray-400 py-4 text-center text-xs mt-10 no-print">
         <p>&copy; ২০২৬ স্কুল রেজাল্ট ম্যানেজমেন্ট সিস্টেম | সকল অধিকার সংরক্ষিত</p>
     </footer>
 
@@ -192,7 +202,6 @@
             }
         };
 
-        // গুগল শিট থেকে সিঙ্ক হওয়া সংরক্ষিত নম্বরগুলোকে লোকাল স্টোরেজে সঠিকভাবে ম্যাপ করা
         function loadSavedMarksToLocalStorage() {
             if (masterData.saved_marks && masterData.saved_marks.length > 0) {
                 let localSavedMarks = JSON.parse(localStorage.getItem('saved_student_marks') || "{}");
@@ -490,7 +499,6 @@
                 else if (subjCode === "153" || subjCode === "110" || subjCode === "141" || subjCode === "140") {
                     students = students.filter(s => String(s.department || "").trim() === "মানবিক");
                 } 
-                // ব্যবসায় শিক্ষা / কমার্স সাবজেক্টের ক্ষেত্রে (যেমন হিসাববিজ্ঞান, ফিন্যান্স, ব্যবসায় উদ্যোগ ইত্যাদি) শুধু ব্যবসায় বিভাগের ছাত্রছাত্রী ফিল্টার করা
                 else if (subjCode === "146" || subjCode === "143" || subjCode === "152" || subjCode === "139" || subjName.includes("হিসাববিজ্ঞান") || subjName.includes("ফিন্যান্স") || subjName.includes("উদ্যোগ")) {
                     students = students.filter(s => {
                         const dept = String(s.department || "").trim();
@@ -665,6 +673,126 @@
                 console.error(error);
                 alert('ত্রুটি: ডেটা পাঠানো সম্ভব হয়নি।');
             }
+        }
+
+        // প্রিন্ট প্রিভিউ উইন্ডো তৈরি করার ফাংশন
+        function openPrintPreview() {
+            if (!activeAssignment || !currentTeacher) {
+                alert('প্রথমে পরীক্ষা, শ্রেণী, সেকশন ও বিষয় নির্বাচন করুন!');
+                return;
+            }
+
+            const schoolSetting = masterData.settings && masterData.settings.length > 0 ? masterData.settings[0] : {};
+            const schoolName = schoolSetting.school_name || document.getElementById('headerSchoolName').innerText;
+            const eiinNo = schoolSetting.eiin_no ? `EIIN: ${schoolSetting.eiin_no}` : '';
+            const mpoCode = schoolSetting.mpo_code ? `MPO Code: ${schoolSetting.mpo_code}` : '';
+            const address = (schoolSetting.thana || schoolSetting.district) ? `থানা: ${schoolSetting.thana || ''}, জেলা: ${schoolSetting.district || ''}` : '';
+
+            const rows = document.querySelectorAll('#studentMarksTableBody tr');
+            let tableRowsHtml = '';
+
+            rows.forEach((row, index) => {
+                const cols = row.querySelectorAll('td');
+                if (cols.length >= 9) {
+                    const roll = cols[0].innerText;
+                    const studentId = cols[1].innerText;
+                    const name = cols[2].innerText;
+                    const deptRel = cols[3].innerText;
+                    const isAbsent = row.querySelector('.absent-chk').checked;
+                    
+                    const writtenVal = row.querySelector('.written-input') ? row.querySelector('.written-input').value : '-';
+                    const mcqVal = row.querySelector('.mcq-input') ? row.querySelector('.mcq-input').value : '-';
+                    const practicalVal = row.querySelector('.practical-input') ? row.querySelector('.practical-input').value : '-';
+                    const totalVal = cols[8].innerText;
+
+                    tableRowsHtml += `
+                        <tr>
+                            <td style="border: 1px solid #ddd; padding: 6px; text-align: center;">${roll}</td>
+                            <td style="border: 1px solid #ddd; padding: 6px; text-align: center; font-family: monospace;">${studentId}</td>
+                            <td style="border: 1px solid #ddd; padding: 6px;">${name}</td>
+                            <td style="border: 1px solid #ddd; padding: 6px; text-align: center;">${deptRel}</td>
+                            <td style="border: 1px solid #ddd; padding: 6px; text-align: center;">${isAbsent ? '<span style="color: red; font-weight: bold;">অনুপস্থিত (Absent)</span>' : 'উপস্থিত'}</td>
+                            <td style="border: 1px solid #ddd; padding: 6px; text-align: center;">${isAbsent ? '-' : writtenVal}</td>
+                            <td style="border: 1px solid #ddd; padding: 6px; text-align: center;">${isAbsent ? '-' : mcqVal}</td>
+                            <td style="border: 1px solid #ddd; padding: 6px; text-align: center;">${isAbsent ? '-' : practicalVal}</td>
+                            <td style="border: 1px solid #ddd; padding: 6px; text-align: center; font-weight: bold;">${totalVal}</td>
+                        </tr>
+                    `;
+                }
+            });
+
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html lang="bn">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>রেজাল্ট প্রিন্ট প্রিভিউ - ${activeAssignment.subject_name}</title>
+                    <style>
+                        body { font-family: 'Hind Siliguri', sans-serif; color: #333; margin: 20px; }
+                        .text-center { text-align: center; }
+                        .font-bold { font-weight: bold; }
+                        .header-box { border-bottom: 2px solid #991b1b; padding-bottom: 10px; margin-bottom: 15px; }
+                        .info-grid { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 14px; background: #f9fafb; padding: 10px; border-radius: 6px; border: 1px solid #e5e7eb; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+                        th { background-color: #991b1b; color: white; border: 1px solid #991b1b; padding: 8px; text-align: center; }
+                        td { border: 1px solid #d1d5db; padding: 6px; }
+                        .signature-section { margin-top: 50px; display: flex; justify-content: space-between; font-size: 14px; }
+                        .sig-box { border-top: 1px solid #333; width: 200px; text-align: center; padding-top: 5px; }
+                        @media print {
+                            .no-print { display: none; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header-box text-center">
+                        <h2 style="margin: 0; color: #991b1b; font-size: 22px;">${schoolName}</h2>
+                        <p style="margin: 4px 0; font-size: 13px; color: #555;">${eiin_no} ${mpo_code ? '| ' + mpo_code : ''} ${address ? '| ' + address : ''}</p>
+                        <h3 style="margin: 8px 0 0 0; font-size: 16px; background: #fee2e2; display: inline-block; padding: 3px 15px; border-radius: 4px; color: #7f1d1d;">বিষয়ভিত্তিক ফলাফল বিবরণী</h3>
+                    </div>
+
+                    <div class="info-grid">
+                        <div>
+                            <p style="margin: 2px 0;"><strong>পরীক্ষার নাম:</strong> ${activeAssignment.exam_type}</p>
+                            <p style="margin: 2px 0;"><strong>শ্রেণী:</strong> ${activeAssignment.class_name} | <strong>সেকশন:</strong> ${activeAssignment.section_name || activeAssignment.section}</p>
+                        </div>
+                        <div>
+                            <p style="margin: 2px 0;"><strong>বিষয়:</strong> ${activeAssignment.subject_name} (কোড: ${activeAssignment.subject_code})</p>
+                            <p style="margin: 2px 0;"><strong>বিষয় শিক্ষক:</strong> ${currentTeacher.name} (${currentTeacher.designation})</p>
+                        </div>
+                    </div>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>রোল</th>
+                                <th>স্টুডেন্ট আইডি</th>
+                                <th>শিক্ষার্থীর নাম</th>
+                                <th>ধর্ম / বিভাগ</th>
+                                <th>উপস্থিতি</th>
+                                <th>লিখিত</th>
+                                <th>MCQ</th>
+                                <th>ব্যবহারিক</th>
+                                <th>মোট নম্বর</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${tableRowsHtml}
+                        </tbody>
+                    </table>
+
+                    <div class="signature-section">
+                        <div class="sig-box">বিষয় শিক্ষকের স্বাক্ষর</div>
+                        <div class="sig-box">প্রধান শিক্ষকের স্বাক্ষর</div>
+                    </div>
+
+                    <div class="no-print text-center" style="margin-top: 30px;">
+                        <button onclick="window.print()" style="background: #2563eb; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 6px; cursor: pointer; font-weight: bold;">🖨️ প্রিন্ট করুন / PDF সেভ করুন</button>
+                    </div>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
         }
     </script>
 </body>
