@@ -192,17 +192,16 @@
             }
         };
 
-        // গুগল শিট থেকে আসা সংরক্ষিত নম্বরগুলোকে লোকাল স্টোরেজে সাজিয়ে নেওয়া যাতে ক্রস-ডিভাইস থেকে দেখতে পাওয়া যায়
+        // গুগল শিট থেকে সিঙ্ক করা সংরক্ষিত নম্বরগুলোকে লোকাল স্টোরেজে সঠিকভাবে ম্যাপ করা
         function loadSavedMarksToLocalStorage() {
             if (masterData.saved_marks && masterData.saved_marks.length > 0) {
                 let localSavedMarks = JSON.parse(localStorage.getItem('saved_student_marks') || "{}");
                 masterData.saved_marks.forEach(item => {
-                    // কী ফরম্যাট: examName_className_section_roll_subjectCode
                     const key = `${item.exam_name}_${item.class_name}_${item.section}_${item.roll}_${item.subject_code}`;
                     localSavedMarks[key] = {
-                        written: item.written !== undefined ? item.written : '',
-                        mcq: item.mcq !== undefined ? item.mcq : '',
-                        practical: item.practical !== undefined ? item.practical : '',
+                        written: item.written !== undefined && item.written !== "" ? item.written : '',
+                        mcq: item.mcq !== undefined && item.mcq !== "" ? item.mcq : '',
+                        practical: item.practical !== undefined && item.practical !== "" ? item.practical : '',
                         absent: item.absent === "YES"
                     };
                 });
@@ -254,7 +253,7 @@
                     localStorage.setItem('synced_master_data', JSON.stringify(masterData));
                     loadSavedMarksToLocalStorage();
                     updateHeaderSchoolInfo();
-                    alert('সফলভাবে গুগল শিট থেকে সমস্ত ডেটা সিঙ্ক করা হয়েছে!');
+                    alert('সফলভাবে গুগল শিট থেকে সমস্ত ডেটা ও সংরক্ষিত নম্বর সিঙ্ক করা হয়েছে!');
                 } else {
                     console.error('সিঙ্ক করতে সমস্যা হয়েছে: ' + (response.message || 'অজানা ত্রুটি'));
                 }
@@ -491,7 +490,8 @@
                 else if (subjCode === "153" || subjCode === "110" || subjCode === "141" || subjCode === "140") {
                     students = students.filter(s => String(s.department || "").trim() === "মানবিক");
                 } 
-                else if (subjCode === "146" || subjCode === "143" || subjCode === "152" || subjName.includes("হিসাববিজ্ঞান") || subjName.includes("ফিন্যান্স")) {
+                // ব্যবসায় শিক্ষা / কমার্স সাবজেক্টের ক্ষেত্রে (যেমন হিসাববিজ্ঞান, ফিন্যান্স, ব্যবসায় উদ্যোগ ইত্যাদি) শুধু ব্যবসায় বিভাগের ছাত্রছাত্রী ফিল্টার করা
+                else if (subjCode === "146" || subjCode === "143" || subjCode === "152" || subjCode === "139" || subjName.includes("হিসাববিজ্ঞান") || subjName.includes("ফিন্যান্স") || subjName.includes("উদ্যোগ")) {
                     students = students.filter(s => {
                         const dept = String(s.department || "").trim();
                         return dept.includes("ব্যবসায়") || dept.includes("ব্যবসায়") || dept.includes("ব্যবসা");
@@ -520,7 +520,6 @@
 
             students.forEach((stu) => {
                 const mainStudentId = stu.id || stu.student_id || stu.roll;
-                // কনসিস্টেন্ট লোকাল স্টোরেজ কী ফরম্যাট ব্যবহার করা হচ্ছে
                 const key = `${assign.exam_type}_${assign.class_name}_${assign.section_name || assign.section}_${stu.roll}_${assign.subject_code}`;
                 const existing = savedMarks[key] || { written: '', mcq: '', practical: '', absent: false };
 
