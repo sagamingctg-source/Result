@@ -192,7 +192,7 @@
             }
         };
 
-        // গুগল শিট থেকে সিঙ্ক করা সংরক্ষিত নম্বরগুলোকে লোকাল স্টোরেজে সঠিকভাবে ম্যাপ করা
+        // গুগল শিট থেকে সিঙ্ক হওয়া সংরক্ষিত নম্বরগুলোকে লোকাল স্টোরেজে সঠিকভাবে ম্যাপ করা
         function loadSavedMarksToLocalStorage() {
             if (masterData.saved_marks && masterData.saved_marks.length > 0) {
                 let localSavedMarks = JSON.parse(localStorage.getItem('saved_student_marks') || "{}");
