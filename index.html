@@ -416,20 +416,17 @@
         }
 
         window.onload = function() {
-            let savedUrl = localStorage.getItem('google_script_url');
-            if (!savedUrl) {
-                savedUrl = DEFAULT_SCRIPT_URL;
-                localStorage.setItem('google_script_url', savedUrl);
-            }
-            document.getElementById('topScriptUrlInput').value = savedUrl;
+            // পুরোনো লোকাল স্টোরেজের ইউআরএল ওভাররাইট করে নতুন ডিফল্ট ইউআরএল ফিক্সড করে দেওয়া
+            localStorage.setItem('google_script_url', DEFAULT_SCRIPT_URL);
+            document.getElementById('topScriptUrlInput').value = DEFAULT_SCRIPT_URL;
+
+            // শিট থেকে সরাসরি লেটেস্ট ডেটা (টাইমার, পাসওয়ার্ডসহ) সিঙ্ক করে মাস্টার ডেটা আপডেট করা
+            syncFromGoogleSheet(true);
+
             updateHeaderSchoolInfo();
             loadSavedMarksToLocalStorage();
             populateAllSearchDropdowns();
             checkPublishTimerStatus();
-
-            if (!masterData.teachers || masterData.teachers.length === 0) {
-                syncFromGoogleSheet(true);
-            }
         };
 
         function loadSavedMarksToLocalStorage() {
